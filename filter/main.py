@@ -27,7 +27,7 @@ def init()->(set,set):
         empty_data={}
         with open(OUTPUT_JSON_PATH+"/config/logging_failed.json", 'w',encoding='utf-8') as f:
             json.dump(empty_data, f)
-        return set()
+        return (set(),set())
     else:
         finished_set = set()
         # 将所有已经处理过的文件的文件名以集合set形式装入内存
@@ -43,7 +43,6 @@ def update_records(records):
     with open(file_path, 'a', encoding='utf-8') as f:
         f.write('\n'.join(records))
 
-# TODO 必须迭代一个更先进的日志信息处理模块
 def logging_failed(file_name:str):
     file_path = OUTPUT_JSON_PATH+"/config/logging_failed.json"
     cur_time = get_current_datetime()
@@ -136,11 +135,11 @@ def third_process(html:str)->str:
     return attrs['title']
 
 def data_filter():
-    #从路径中获取所有HTML文档
+    #从路径中获取所有HTML文档的文件名
     raw_htmls = os.listdir(RAW_HTML_PATH)
     # 统计所有的文件个数
     htmls_all_cnt = len(raw_htmls)
-    #读取已完成的记录表 records(set)
+    #读取已完成/失败的记录表 records(set)
     records,fails = init()
     #实时计算records的大小size，这代表着进度->size/len(raw_htmls)
     htmls_all_finished = len(records)
@@ -154,6 +153,10 @@ def data_filter():
         pbar.n = htmls_all_finished
         for raw_html in raw_htmls:
             try:
+                # 已经是处理过的文件了，直接跳过
+                if raw_html in records:
+                    continue
+                logger.info(f"当前正在对文件:{raw_html}进行清洗工作")
                 with open(os.path.join(RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
                     raw_content = f.read()
                 _html1 = first_filter(raw_content) #第一步清洗
@@ -167,7 +170,6 @@ def data_filter():
             except Exception as e:
                 #记录错误记录
                 logging_failed(raw_html)
-                pass
             # 更新进度条
             pbar.n = htmls_all_finished
             pbar.refresh()

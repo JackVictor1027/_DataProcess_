@@ -2,9 +2,12 @@ import hashlib
 import json
 import re,jieba
 from datetime import datetime
+import os
 
 import jieba.analyse
-from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOOL_SIMPLE
+from sympy.codegen.fnodes import intent_inout
+
+from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOOL_SIMPLE, CONVERT_EXTENSIONS
 
 OUTPUT_JSON_PATH=PURIED_JSON_PATH+SCHOOL_SIMPLE
 
@@ -46,3 +49,26 @@ def save_as_json(title:str,publish_date:str,keywords:str,category:str,md_content
     except Exception as e:
         #TODO 异常处理
         pass
+
+def scan_files(dir,extensions)->dict:
+    """
+    扫描指定目录下的文件，并返回所有指定文件类型的对应数目。
+    :param dir: 要扫描的目录路径
+    :param extensions: 文件后缀名列表，如['.docx','.pdf']
+    :return:
+    """
+    file_names = os.listdir(dir)
+    ext_dict={}
+    for file_name in file_names:
+        ext = os.path.splitext(file_name)[1]
+        if ext in extensions:
+            if ext_dict.get(ext) is not None:
+                ext_dict[ext]+=1
+            else:
+                ext_dict[ext]=1
+    return ext_dict
+
+def test_scan_files():
+    path = "D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn"
+    d = scan_files(path,CONVERT_EXTENSIONS)
+    print(d)
