@@ -7,11 +7,12 @@ from common.logger_setup import logger
 from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
 import pypandoc
 
-OUTPUT_PATH=COMMON_OUTPUT_PATH+SCHOOL_SIMPLE
+os.chdir(os.getcwd()+"\\xlsx2md\\")
+OUTPUT_PATH=SCHOOL_SIMPLE
 
 def update_records(xlsx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
-        f.write('\n'.join(xlsx))
+        f.write(xlsx)
 
 def get_current_process():
     with open(OUTPUT_PATH+"/config/records.txt",'r',encoding='utf-8') as f:
@@ -21,6 +22,7 @@ def get_current_process():
 # 有了主控制程序，这里能保证传过来的xlsx，是从未处理过的，也就是说，已经不用考虑重复的问题
 def xlsx2md(xlsx,xlsx_cnt):
     try:
+        #获取当前任务进度
         finished_cnt = get_current_process()
         logger.info(f"正在转换xlsx:{xlsx},共有{xlsx_cnt}份xlsx,目前进度为{finished_cnt/xlsx_cnt}")
         # 获取文件名，给转换后的md文件命名
@@ -38,6 +40,12 @@ def xlsx2md(xlsx,xlsx_cnt):
         with open(OUTPUT_PATH+'/'+base+'.md', 'w', encoding='utf-8') as f:
             f.write(md_table)
 
+        # 更新记录表
         update_records(xlsx)
     except Exception as e:
         logger.error(f"转换xlsx文件:{xlsx}失败")
+
+def test_xlsx2md():
+    xlsx = '1544149873959076559.xlsx'
+    xlsx_cnt = 125
+    xlsx2md(xlsx,xlsx_cnt)

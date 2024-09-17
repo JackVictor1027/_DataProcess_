@@ -7,7 +7,8 @@ import os
 import jieba.analyse
 from sympy.codegen.fnodes import intent_inout
 
-from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOOL_SIMPLE, CONVERT_EXTENSIONS
+from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOOL_SIMPLE
+from file_convert.config import CONVERT_EXTENSIONS
 
 OUTPUT_JSON_PATH=PURIED_JSON_PATH+SCHOOL_SIMPLE
 

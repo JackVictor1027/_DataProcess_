@@ -8,9 +8,11 @@ from common.logger_setup import logger
 from common.tools import scan_files, get_current_datetime
 from file_convert.config import ALL_FILES_PATH, WORK_DIRS
 from file_convert.docx2md.main import docx2md
+from file_convert.pdf2md.main import pdf2md
 from file_convert.tools.doc2docx import convert_doc_to_docx
-from file_convert.xls2md.main import xlsx2md
-from filter.config import CONVERT_EXTENSIONS, SCHOOL_SIMPLE
+from file_convert.tools.xls2xlsx import convert_xls_to_xlsx
+from file_convert.xlsx2md.main import xlsx2md
+from file_convert.config import CONVERT_EXTENSIONS, SCHOOL_SIMPLE
 
 
 def init()->(set,set):
@@ -20,7 +22,7 @@ def init()->(set,set):
         # 检查目录是否存在，如果不存在就创建
         work_path = work_dir+SCHOOL_SIMPLE+'/config'
         if not os.path.exists(work_path):
-            os.mkdir(work_path)
+            os.makedirs(work_path)
             file = open(work_path+"/records.txt",'w')
             file.close()
             empty_data={}
@@ -52,16 +54,15 @@ def __doc2md(doc_name,docx_cnt):
 def __xls2md(xls_name,xlsx_cnt):
     xls_path = ALL_FILES_PATH+xls_name
     xlsx_path = xls_path+'x'
-    convert_doc_to_docx(xls_path,xlsx_path)
-    docx2md(xlsx_path,xlsx_cnt)
+    xlsx_name = xls_name+'x'
+    convert_xls_to_xlsx(xls_path,xlsx_path)
+    xlsx2md(xlsx_name,xlsx_cnt)
 
 # TODO 主控制程序和日志记录程序写在这里，失败和成功信息记录就写在各转换目录下
 # 这是主控制程序，宏观来看，主要追踪当前正在处理哪些文件，目前总任务的进度在哪里
 def server_distribute():
     name_of_files = os.listdir(ALL_FILES_PATH)
-    # 指定路径下的pdf有多少个
-    # 指定路径下的docx有多少份
-    # 指定路径下的xlsx有多少个
+    # 指定路径下的pdf,docx,xlsx有多少个
     ext_dict = scan_files(ALL_FILES_PATH,CONVERT_EXTENSIONS)
     all_cnt_tasks = sum(ext_dict.values())
     # 转换成功/失败的总数
@@ -88,13 +89,13 @@ def server_distribute():
                         fails += 1
                         continue
 
-                records.add(file_name) # TODO 续传设计有误
+                records.add(file_name)
             except Exception as e:
                 # 记录失败次数
                 logger.error(f"文件:{file_name}转换失败,失败原因未知")
                 fails+=1
             # 更新进度条
-            pbar.n = records
+            pbar.n = len(records)
             pbar.refresh()
     logger.info(f'已完成文档转换工作，一共处理得到{records}份MD文档')
 

@@ -6,11 +6,11 @@ from common.logger_setup import logger
 from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
 import pypandoc
 
-OUTPUT_PATH=COMMON_OUTPUT_PATH+SCHOOL_SIMPLE
-
+OUTPUT_PATH=SCHOOL_SIMPLE
+os.chdir(os.getcwd()+"\\docx2md\\")
 def update_records(docx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
-        f.write('\n'.join(docx))
+        f.write(docx)
 
 def get_current_process():
     with open(OUTPUT_PATH+"/config/records.txt",'r',encoding='utf-8') as f:
