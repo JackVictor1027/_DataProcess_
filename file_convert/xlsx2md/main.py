@@ -7,12 +7,11 @@ from common.logger_setup import logger
 from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
 import pypandoc
 
-os.chdir(os.getcwd()+"\\xlsx2md\\")
-OUTPUT_PATH=SCHOOL_SIMPLE
+OUTPUT_PATH="./xlsx2md/"+SCHOOL_SIMPLE
 
 def update_records(xlsx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
-        f.write(xlsx)
+        f.write(xlsx+"\n")
 
 def get_current_process():
     with open(OUTPUT_PATH+"/config/records.txt",'r',encoding='utf-8') as f:
@@ -44,6 +43,7 @@ def xlsx2md(xlsx,xlsx_cnt):
         update_records(xlsx)
     except Exception as e:
         logger.error(f"转换xlsx文件:{xlsx}失败")
+        raise
 
 def test_xlsx2md():
     xlsx = '1544149873959076559.xlsx'

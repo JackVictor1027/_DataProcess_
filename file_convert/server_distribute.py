@@ -14,7 +14,7 @@ from file_convert.tools.xls2xlsx import convert_xls_to_xlsx
 from file_convert.xlsx2md.main import xlsx2md
 from file_convert.config import CONVERT_EXTENSIONS, SCHOOL_SIMPLE
 
-
+# Python-Working-Directory:[Project]\\file_convert
 def init()->(set,set):
     records_set = set()
     fails_set = set()
@@ -48,8 +48,9 @@ def logging_failed(file_name:str):
 def __doc2md(doc_name,docx_cnt):
     doc_path = ALL_FILES_PATH+doc_name
     docx_path = doc_path+'x'
+    docx_name = doc_name+'x'
     convert_doc_to_docx(doc_path,docx_path)
-    docx2md(docx_path,docx_cnt)
+    docx2md(docx_name,docx_cnt)
 
 def __xls2md(xls_name,xlsx_cnt):
     xls_path = ALL_FILES_PATH+xls_name
@@ -73,7 +74,7 @@ def server_distribute():
         pbar.n = records
         for file_name in name_of_files:
             try:
-                if file_name in records:
+                if file_name in records or file_name+"x" in name_of_files: # TODO 查重异常
                     continue
                 logger.info(f"当前正在转换文件:{file_name}")
                 #获取文件后缀名，分配对应的服务

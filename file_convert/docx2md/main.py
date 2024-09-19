@@ -6,11 +6,11 @@ from common.logger_setup import logger
 from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
 import pypandoc
 
-OUTPUT_PATH=SCHOOL_SIMPLE
-os.chdir(os.getcwd()+"\\docx2md\\")
+OUTPUT_PATH="./docx2md/"+SCHOOL_SIMPLE
+
 def update_records(docx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
-        f.write(docx)
+        f.write(docx+"\n")
 
 def get_current_process():
     with open(OUTPUT_PATH+"/config/records.txt",'r',encoding='utf-8') as f:
@@ -25,8 +25,9 @@ def docx2md(docx,docx_cnt):
         # 获取文件名，给转换后的md文件命名
         base,ext = os.path.splitext(docx)
         # 将 .doc 文件转换为 .md
-        md_output = pypandoc.convert_file(ALL_FILES_PATH+docx, 'markdown', outputfile=OUTPUT_PATH+'/'+ext+".md")
+        md_output = pypandoc.convert_file(ALL_FILES_PATH+docx, 'markdown', outputfile=OUTPUT_PATH+'/'+base+".md")
 
         update_records(docx)
     except Exception as e:
         logger.error(f"转换docx文件:{docx}失败")
+        raise
