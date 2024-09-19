@@ -19,7 +19,7 @@ def get_current_process():
     return process
 
 # 有了主控制程序，这里能保证传过来的xlsx，是从未处理过的，也就是说，已经不用考虑重复的问题
-def xlsx2md(xlsx,xlsx_cnt):
+async def xlsx2md(xlsx,xlsx_cnt):
     try:
         #获取当前任务进度
         finished_cnt = get_current_process()
@@ -42,7 +42,7 @@ def xlsx2md(xlsx,xlsx_cnt):
         # 更新记录表
         update_records(xlsx)
     except Exception as e:
-        logger.error(f"转换xlsx文件:{xlsx}失败")
+        logger.error(f"转换xlsx文件:{xlsx}失败,原因为{e}")
         raise
 
 def test_xlsx2md():

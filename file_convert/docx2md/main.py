@@ -18,7 +18,7 @@ def get_current_process():
     return process
 
 # 有了主控制程序，这里能保证传过来的docx，是从未处理过的，也就是说，已经不用考虑重复的问题
-def docx2md(docx,docx_cnt):
+async def docx2md(docx,docx_cnt):
     try:
         finished_cnt = get_current_process()
         logger.info(f"正在转换docx:{docx},共有{docx_cnt}份docx,目前进度为{finished_cnt/docx_cnt}")
@@ -29,5 +29,5 @@ def docx2md(docx,docx_cnt):
 
         update_records(docx)
     except Exception as e:
-        logger.error(f"转换docx文件:{docx}失败")
+        logger.error(f"转换docx文件:{docx}失败,原因为{e}")
         raise
