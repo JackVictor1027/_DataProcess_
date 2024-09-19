@@ -1,5 +1,4 @@
 ALL_FILES_PATH="" # 等待转换的文档路径
-#RAW_HTML_PATH="D:/TechDream/AI/AI_LLM_query/data/hbfu/html/hbfu.edu.cn/"
 
 PDF2MD_OUTPUT_PATH="pdf2md/"
 DOCX2MD_OUTPUT_PATH="docx2md/"
