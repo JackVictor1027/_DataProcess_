@@ -23,6 +23,6 @@ def convert_xls_to_xlsx(xls_path:str, xlsx_path:str):
     excel.Quit()
 
 def test_xls2xlsx():
-    xls = 'D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn/1544149873959076559.xls'
-    xlsx = 'D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn/1544149873959076559.xlsx'
+    xls = '1544149873959076559.xls'
+    xlsx = '1544149873959076559.xlsx'
     convert_xls_to_xlsx(xls,xlsx)
