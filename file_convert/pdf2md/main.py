@@ -29,7 +29,7 @@ def pdf2md(pdf_file,pdf_cnt):
         #更新记录表
         update_records(pdf_file)
     except Exception as e:
-        logger.error(f"转换pdf文件:{pdf_file}失败,原因为:{e}")
+        logger.error(f"转换pdf文件:{pdf_file}失败")
         raise # 将异常传递给调用方
 
 def test_pdf2md():

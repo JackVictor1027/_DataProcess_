@@ -169,7 +169,6 @@ def data_filter():
                 update_records(records)
             except Exception as e:
                 #记录错误记录
-                logger.error(f"文件清洗失败:{raw_html},原因为{e}")
                 logging_failed(raw_html)
             # 更新进度条
             pbar.n = htmls_all_finished
