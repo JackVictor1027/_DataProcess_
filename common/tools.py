@@ -3,6 +3,7 @@ import json
 import re,jieba
 from datetime import datetime
 import os
+from os.path import isfile
 
 import jieba.analyse
 from sympy.codegen.fnodes import intent_inout
@@ -11,6 +12,21 @@ from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOO
 from file_convert.config import CONVERT_EXTENSIONS
 
 OUTPUT_JSON_PATH=PURIED_JSON_PATH+SCHOOL_SIMPLE
+
+#将work_path路径下，指定学校的所有处理后文件和记录全部删除，回到任务的初始状态
+# ../file_convert/xlsx2md/   hbfu
+def restart(work_path,school):
+    work_path = work_path+school
+    files = os.listdir(work_path)
+    for file in files:
+        if os.path.isfile(work_path+"/"+file):
+            os.remove(work_path+"/"+file)
+
+    # 清空logging_failed.json和records.txt
+    with open(work_path+"/config/records.txt","w",encoding="utf-8") as f:
+        f.write("")
+    with open(work_path+"/config/logging_failed.json","w",encoding="utf-8") as f:
+        f.write("{}")
 
 def generate_hash_value(content:str) -> str:
     """ 计算仅和内容有关的稳定哈希值 """
@@ -73,3 +89,8 @@ def test_scan_files():
     path = "D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn"
     d = scan_files(path,CONVERT_EXTENSIONS)
     print(d)
+
+def test_restart():
+    work_path = "../file_convert/pdf2md/"
+    school = SCHOOL_SIMPLE
+    restart(work_path,school)

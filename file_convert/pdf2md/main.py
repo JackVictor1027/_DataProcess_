@@ -24,7 +24,7 @@ def pdf2md(pdf_file,pdf_cnt):
         finished_cnt = get_current_process()
         logger.info(f"正在转换pdf:{pdf_file},共有{pdf_cnt}份pdf,目前进度为{finished_cnt/pdf_cnt}")
         # 调用批处理脚本
-        subprocess.run(["magic-pdf","-p",ALL_FILES_PATH+pdf_file,"-o",OUTPUT_PATH])
+        # subprocess.run(["magic-pdf","-p",ALL_FILES_PATH+pdf_file,"-o",OUTPUT_PATH])
 
         #更新记录表
         update_records(pdf_file)

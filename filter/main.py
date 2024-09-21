@@ -160,12 +160,12 @@ def data_filter(resources_queue,records,htmls_all_cnt):
             with LOCK:
                 records.add(raw_html)
                 update_records(raw_html)#写入记录表
-                pbar.n = len(records)
-                pbar.refresh()
+                #更新进度条
+                pbar.update(1)
         except Exception as e:
             #记录错误记录
             with LOCK:
-                pbar.refresh()
+                pbar.update(1)
                 logger.error(f"线程{multiprocessing.current_process().name}清洗文件{raw_html}失败,原因:{e}")
                 logging_failed(raw_html)
         finally:
@@ -214,4 +214,4 @@ if __name__ == '__main__':
         resources_queue.put(raw_html)
 
     resources_queue.join()
-    logger.info(f"已完成数据清洗工作，一共处理得到{htmls_all_finished}份有效数据文件")
+    logger.info(f"已完成数据清洗工作，一共处理得到{len(records)}份有效数据文件")
