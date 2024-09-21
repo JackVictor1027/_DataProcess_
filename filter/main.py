@@ -140,38 +140,37 @@ def third_process(html:str)->str:
     save_as_json(attrs["title"],attrs["publish_date"],keywords,attrs["category"],md_content,hash_value)
     return attrs['title']
 
-def data_filter(raw_html,records:set[str])->bool:
+def data_filter(records:set[str],htmls_all_cnt):
     # 设置进度条
     # TODO 进度条不适合放在线程运行中
     # 主循环
-    try:
-        # 已经是处理过的文件了，直接跳过
-        if raw_html in records:
-            return False
-        logger.info(f"线程{multiprocessing.current_process().name}当前正在对文件:{raw_html}进行清洗工作")
-        with open(os.path.join(RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
-            raw_content = f.read()
-        _html1 = first_filter(raw_content) #第一步清洗
-        _html2 = second_wash(_html1) #第二步清洗
-        third_process(_html2) #第三步处理并对文本重排进行格式化,得到最终的纯净MD
+    with tqdm(total=htmls_all_cnt) as pbar:
+        while records:
+            try:
+                raw_html = resources_queue.get()
+                # 已经是处理过的文件了，直接跳过
+                if raw_html in records:
+                    continue
+                with LOCK:
+                    logger.info(f"线程{multiprocessing.current_process().name}当前正在对文件:{raw_html}进行清洗工作")
+                with open(os.path.join(RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
+                    raw_content = f.read()
+                _html1 = first_filter(raw_content) #第一步清洗
+                _html2 = second_wash(_html1) #第二步清洗
+                third_process(_html2) #第三步处理并对文本重排进行格式化,得到最终的纯净MD
 
-        records.add(raw_html)
-        update_records(raw_html)#写入记录表
-        return True
-    except Exception as e:
-        #记录错误记录
-        logger.error(f"线程{multiprocessing.current_process().name}清洗文件{raw_html}失败,原因:{e}")
-        logging_failed(raw_html)
-        return False
+                with LOCK:
+                    records.add(raw_html)
+                    update_records(raw_html)#写入记录表
+            except Exception as e:
+                #记录错误记录
+                with LOCK:
+                    logger.error(f"线程{multiprocessing.current_process().name}清洗文件{raw_html}失败,原因:{e}")
+                    logging_failed(raw_html)
+            with LOCK:
+                pbar.n = len(records)
+                pbar.refresh()
 
-async def async_woker(records:set[str]):
-    while not resources_queue.empty():
-        raw_html = resources_queue.get()
-        state = await data_filter(raw_html,records)
-        sleep
-
-def run_worker(records:set[str]):
-    Process.run(async_woker,records)
 
 if __name__ == '__main__':
     #从路径中获取所有HTML文档的文件名
@@ -191,12 +190,21 @@ if __name__ == '__main__':
     logger.info("开始进行数据清洗...")
     logger.info(f"当前总任务数: {htmls_all_cnt},已完成的任务数:{htmls_all_finished},失败或无效的任务数:{htmls_all_failed}")
 
-    with tqdm(total=htmls_all_cnt) as pbar:
-        with concurrent.futures.ThreadPoolExecutor(MAXNUM_PROCESSES) as executor:
-            tasks = [executor.submit(data_filter,raw_htmls,htmls_all_cnt,records,htmls_all_failed) for _ in range(MAXNUM_PROCESSES)]
-            for task in concurrent.futures.as_completed(tasks):
-                task.result()
-            pbar.n = len(records)
-            pbar.refresh()
+    processes = []
+    for id in range(MAXNUM_PROCESSES):
+        process = Process(name=f"进程{id}",target=data_filter, args=(records,htmls_all_cnt))
+
+    for process in processes:
+        process.run()
+
+    for process in processes:
+        process.join()
+    # with tqdm(total=htmls_all_cnt) as pbar:
+    #     with concurrent.futures.ThreadPoolExecutor(MAXNUM_PROCESSES) as executor:
+    #         tasks = [executor.submit(data_filter,raw_htmls,htmls_all_cnt,records,htmls_all_failed) for _ in range(MAXNUM_PROCESSES)]
+    #         for task in concurrent.futures.as_completed(tasks):
+    #             task.result()
+    #         pbar.n = len(records)
+    #         pbar.refresh()
 
     logger.info(f"已完成数据清洗工作，一共处理得到{htmls_all_finished}份有效数据文件")
