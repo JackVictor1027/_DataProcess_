@@ -120,5 +120,4 @@ if __name__ == '__main__':
         files_queue.put(file)
 
     files_queue.join()
-    logger.info(f'已完成文档转换工作，一共处理得到{all_cnt_tasks - len(files_queue)}份MD文档')
-    print(f'已完成文档转换工作，一共处理得到{all_cnt_tasks - len(files_queue)}份MD文档')
+    logger.info(f'已完成文档转换工作，一共处理得到{len(files_queue)}份MD文档')
