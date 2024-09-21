@@ -28,5 +28,5 @@ PROMPT_OF_ATTRS='''
                 如果遭遇无法生成的情况，给对应的属性值赋为null即可:\n
             '''
 
-MAXNUM_PROCESSES = 5
+MAXNUM_PROCESSES = 3
 SLEEP_TIME = 0.05
