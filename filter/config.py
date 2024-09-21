@@ -1,4 +1,4 @@
-RAW_HTML_PATH="D:/TechDream/AI/AI_LLM_query/data/hbfu/html/hbfu.edu.cn" #原始HTML文档路径
+RAW_HTML_PATH="" #原始HTML文档路径
 PURIED_JSON_PATH="jsons/" #处理最终得到的JSON
 ID_AND_CLASS_TAGS = ["footer", "sidebar","navigation-bar","banner","foot-bar","wrapper header",
 			   "t-top","c header","f-nav c","wrapper footer","wrapper nav wp-navi","nav",
@@ -13,9 +13,9 @@ TOP_K=5 # 使用jieba分词进行词频排名后，需要返回几个权重最�
 
 LOCAL_MODEL="qwen2" #使用何种本地大模型进行文章属性的生成
 
-SCHOOL_ID="1"
-SCHOOL_NAME="河北金融学院"
-SCHOOL_SIMPLE="hbfu"
+SCHOOL_ID=""
+SCHOOL_NAME=""
+SCHOOL_SIMPLE=""
 
 PROMPT_OF_ATTRS='''
                 阅读以下的HTML文档，阅读文章前1000字，生成一个不多于35字的标题title，分析文章属于何种类别category，并提取出本篇文章的发布时间publish_date。
