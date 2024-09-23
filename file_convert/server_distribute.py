@@ -7,22 +7,22 @@ from tqdm import tqdm
 
 from common.logger_setup import logger
 from common.tools import scan_files, get_current_datetime
-from file_convert.config import ALL_FILES_PATH, WORK_DIRS, MAXNUM_PROCESSES
+from file_convert.config import Convert_Config
 from file_convert.docx2md.main import docx2md
 from file_convert.pdf2md.main import pdf2md
 from file_convert.tools.doc2docx import convert_doc_to_docx
 from file_convert.tools.xls2xlsx import convert_xls_to_xlsx
 from file_convert.xlsx2md.main import xlsx2md
-from file_convert.config import CONVERT_EXTENSIONS, SCHOOL_SIMPLE
 
+Config = Convert_Config()
 LOCK = multiprocessing.Lock()
 # Python-Working-Directory:[Project]\\file_convert
 def init()->(set,set):
     records_set = set()
     fails_set = set()
-    for work_dir in WORK_DIRS:
+    for work_dir in Convert_Config.WORK_DIRS:
         # 检查目录是否存在，如果不存在就创建
-        work_path = work_dir+SCHOOL_SIMPLE+'/config'
+        work_path = Config.COMMON_OUTPUT_PATH+'/'+work_dir+Config.SCHOOL_SIMPLE+'/config'
         if not os.path.exists(work_path):
             os.makedirs(work_path)
             file = open(work_path+"/records.txt",'w')
@@ -48,14 +48,14 @@ def logging_failed(file_name:str):
         json.dump(data,f,indent=4,ensure_ascii=False)
 
 def __doc2md(doc_name,docx_cnt):
-    doc_path = ALL_FILES_PATH+doc_name
+    doc_path = Config.ALL_FILES_PATH+doc_name
     docx_path = doc_path+'x'
     docx_name = doc_name+'x'
     convert_doc_to_docx(doc_path,docx_path)
     docx2md(docx_name,docx_cnt)
 
 def __xls2md(xls_name,xlsx_cnt):
-    xls_path = ALL_FILES_PATH+xls_name
+    xls_path = Config.ALL_FILES_PATH+xls_name
     xlsx_path = xls_path+'x'
     xlsx_name = xls_name+'x'
     convert_xls_to_xlsx(xls_path,xlsx_path)
@@ -96,16 +96,16 @@ def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
             files_queue.task_done()
 
 def create_processes(files_queue,ext_dict,records,fails,all_cnt_tasks):
-    for id in range(MAXNUM_PROCESSES):
+    for id in range(Config.MAXNUM_PROCESSES):
         process = multiprocessing.Process(name=f"进程{id}",target=server_distribute,args=(files_queue,ext_dict,records,fails,all_cnt_tasks))
         process.daemon = True
         process.start()
 
-if __name__ == '__main__':
+def main():
     files_queue = multiprocessing.JoinableQueue()
-    name_of_files = os.listdir(ALL_FILES_PATH)
+    name_of_files = os.listdir(Config.ALL_FILES_PATH)
     # 指定路径下的pdf,docx,xlsx有多少个
-    ext_dict = scan_files(ALL_FILES_PATH,CONVERT_EXTENSIONS)
+    ext_dict = scan_files(Config.ALL_FILES_PATH,Config.CONVERT_EXTENSIONS)
     all_cnt_tasks = sum(ext_dict.values())
     # 转换成功/失败的总数
     records,fails = init()
@@ -121,3 +121,6 @@ if __name__ == '__main__':
 
     files_queue.join()
     logger.info(f'已完成文档转换工作，一共处理得到{len(files_queue)}份MD文档')
+
+if __name__ == '__main__':
+    main()

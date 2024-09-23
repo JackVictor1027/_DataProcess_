@@ -1,15 +1,26 @@
-ALL_FILES_PATH="" # 等待转换的文档路径
+from db.sql import Convert_Config as cc
 
-PDF2MD_OUTPUT_PATH="pdf2md/"
-DOCX2MD_OUTPUT_PATH="docx2md/"
-COMMON_OUTPUT_PATH="mds/"
 
-SCHOOL_ID=""
-SCHOOL_NAME=""
-SCHOOL_SIMPLE=""
+class Convert_Config:
+    ALL_FILES_PATH="" # 等待转换的文档路径
 
-WORK_DIRS = ['docx2md/','pdf2md/','xlsx2md/']
+    COMMON_OUTPUT_PATH=""
 
-CONVERT_EXTENSIONS=['.pdf','.doc','.docx','.xls','.xlsx']
+    SCHOOL_ID=""
+    SCHOOL_NAME=""
+    SCHOOL_SIMPLE=""
 
-MAXNUM_PROCESSES = 5
+    WORK_DIRS = ['docx2md/','pdf2md/','xlsx2md/']
+
+    CONVERT_EXTENSIONS=['.pdf','.doc','.docx','.xls','.xlsx']
+
+    MAXNUM_PROCESSES = 5
+
+    # 查询数据库，初始化得到实例
+    def __init__(self):
+        config = cc.query.get(1)
+        self.ALL_FILES_PATH = config.all_files_path
+        self.COMMON_OUTPUT_PATH = config.common_output_path
+        self.SCHOOL_NAME = config.school_name
+        self.SCHOOL_SIMPLE = config.school_simple
+        self.MAXNUM_PROCESSES = config.maxnum_processes

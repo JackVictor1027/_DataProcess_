@@ -8,10 +8,12 @@ from os.path import isfile
 import jieba.analyse
 from sympy.codegen.fnodes import intent_inout
 
-from filter.config import TOP_K, SCHOOL_ID, SCHOOL_NAME, PURIED_JSON_PATH, SCHOOL_SIMPLE
-from file_convert.config import CONVERT_EXTENSIONS
+from filter.config import Filter_Config
+from file_convert.config import Convert_Config
 
-OUTPUT_JSON_PATH=PURIED_JSON_PATH+SCHOOL_SIMPLE
+fc = Filter_Config()
+cc = Convert_Config()
+OUTPUT_JSON_PATH=fc.PURIED_JSON_PATH+fc.SCHOOL_SIMPLE
 
 #将work_path路径下，指定学校的所有处理后文件和记录全部删除，回到任务的初始状态
 # ../file_convert/xlsx2md/   hbfu
@@ -38,7 +40,7 @@ def generate_hash_value(content:str) -> str:
 
 def extract_keywords(content:str)->str:
     content = re.sub(r'<[^>]+>', '', content).strip()
-    tags = jieba.analyse.extract_tags(sentence=content, topK=TOP_K)
+    tags = jieba.analyse.extract_tags(sentence=content, topK=fc.TOP_K)
 
     return str(tags)
 
@@ -49,8 +51,8 @@ def get_current_datetime():
 
 def save_as_json(title:str,publish_date:str,keywords:str,category:str,md_content:str,hashValue:str) -> None:
     json_content = {
-        "school_id": SCHOOL_ID,
-        "school_name": SCHOOL_NAME,
+        "school_id": fc.SCHOOL_ID,
+        "school_name": fc.SCHOOL_NAME,
         "title": title,
         "create_at": get_current_datetime(),
         "publish_date": publish_date,
@@ -87,10 +89,10 @@ def scan_files(dir,extensions)->dict:
 
 def test_scan_files():
     path = "D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn"
-    d = scan_files(path,CONVERT_EXTENSIONS)
+    d = scan_files(path,cc.CONVERT_EXTENSIONS)
     print(d)
 
 def test_restart():
     work_path = "../file_convert/pdf2md/"
-    school = SCHOOL_SIMPLE
+    school = fc.SCHOOL_SIMPLE
     restart(work_path,school)

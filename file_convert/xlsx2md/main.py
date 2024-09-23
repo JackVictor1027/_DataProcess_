@@ -4,10 +4,11 @@ from tabulate import tabulate
 from unstructured_inference.logger import logger_onnx
 
 from common.logger_setup import logger
-from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
+from file_convert.config import Convert_Config
 import pypandoc
 
-OUTPUT_PATH="./xlsx2md/"+SCHOOL_SIMPLE
+Config = Convert_Config()
+OUTPUT_PATH=Config.COMMON_OUTPUT_PATH+"xlsx2md/"+Config.SCHOOL_SIMPLE
 
 def update_records(xlsx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
@@ -27,7 +28,7 @@ def xlsx2md(xlsx,xlsx_cnt):
         # 获取文件名，给转换后的md文件命名
         base,ext = os.path.splitext(xlsx)
         # 使用panda读取Excel文件
-        df = pd.read_excel(ALL_FILES_PATH+xlsx)
+        df = pd.read_excel(Config.ALL_FILES_PATH+xlsx)
 
         # panda解析，将空白单元格填充为“无数据”
         df.fillna('无数据', inplace=True)

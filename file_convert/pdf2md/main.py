@@ -5,10 +5,11 @@ from fontTools.unicodedata import script
 from numpy.f2py.auxfuncs import throw_error
 
 from common.logger_setup import logger
-from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
+from file_convert.config import Convert_Config
 
+Config = Convert_Config()
 # pdf的解析较为复杂，使用MinerU效果最好
-OUTPUT_PATH = "./pdf2md/"+SCHOOL_SIMPLE
+OUTPUT_PATH = Config.COMMON_OUTPUT_PATH+"pdf2md/"+Config.SCHOOL_SIMPLE
 
 def update_records(pdf):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
@@ -24,7 +25,7 @@ def pdf2md(pdf_file,pdf_cnt):
         finished_cnt = get_current_process()
         logger.info(f"正在转换pdf:{pdf_file},共有{pdf_cnt}份pdf,目前进度为{finished_cnt/pdf_cnt}")
         # 调用批处理脚本
-        # subprocess.run(["magic-pdf","-p",ALL_FILES_PATH+pdf_file,"-o",OUTPUT_PATH])
+        subprocess.run(["magic-pdf","-p",Config.ALL_FILES_PATH+pdf_file,"-o",OUTPUT_PATH])
 
         #更新记录表
         update_records(pdf_file)

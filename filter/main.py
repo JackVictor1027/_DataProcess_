@@ -17,7 +17,8 @@ from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 from multiprocessing import Queue,Process,Lock
 
-OUTPUT_JSON_PATH=PURIED_JSON_PATH+SCHOOL_SIMPLE
+Config = Filter_Config()
+OUTPUT_JSON_PATH=Config.PURIED_JSON_PATH+Config.SCHOOL_SIMPLE
 LOCK = multiprocessing.Lock()
 
 #TODO 可以独立出去的一个方法
@@ -58,9 +59,9 @@ def logging_failed(file_name:str):
 
 def generate_attrs(content)->dict:
     data = {
-        "model":LOCAL_MODEL,
+        "model":Config.LOCAL_MODEL,
         "prompt":
-            PROMPT_OF_ATTRS+content,
+            Config.PROMPT_OF_ATTRS+content,
         "stream":False
     }
     attrs = query_for_local_model(data)
@@ -101,12 +102,12 @@ def second_wash(html:str)->str:
     try:
         # 枚举删去繁琐的css样式
         soup = bs4.BeautifulSoup(html,"html.parser")
-        tags = ID_AND_CLASS_TAGS
+        tags = Config.ID_AND_CLASS_TAGS
         for tag in tags:
             [element.extract() for element in soup.find_all(class_=tag)]
             [element.extract() for element in soup.find_all(id=tag)]
         #模糊匹配
-        tags= FUZZY_TAGS
+        tags= Config.FUZZY_TAGS
         for tag in tags:
             [element.extract() for element in soup.find_all(class_=re.compile(tag))]
             [element.extract() for element in soup.find_all(id=re.compile(tag))]
@@ -150,7 +151,7 @@ def data_filter(resources_queue,records,htmls_all_cnt):
                 continue
             with LOCK:
                 logger.info(f"{multiprocessing.current_process().name}当前正在对文件:{raw_html}进行清洗工作")
-            with open(os.path.join(RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
+            with open(os.path.join(Config.RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
                 raw_content = f.read()
             _html1 = first_filter(raw_content) #第一步清洗
             _html2 = second_wash(_html1) #第二步清洗
@@ -164,22 +165,21 @@ def data_filter(resources_queue,records,htmls_all_cnt):
         except Exception as e:
             #记录错误记录
             with LOCK:
-                pbar.update(1)
                 logger.error(f"线程{multiprocessing.current_process().name}清洗文件{raw_html}失败,原因:{e}")
                 logging_failed(raw_html)
         finally:
             resources_queue.task_done()
 
 def create_process(resources_queue,records,htmls_all_cnt):
-    for id in range(MAXNUM_PROCESSES):
+    for id in range(Config.MAXNUM_PROCESSES):
         process = multiprocessing.Process(name=f"进程{id}",target=data_filter,args=(resources_queue,records,htmls_all_cnt))
         process.daemon = True # 守护进程
         process.start()
 
 def create_process_pool(resources_queue,records,htmls_all_cnt):
     futures = set()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=MAXNUM_PROCESSES) as executor:
-        for i in range(MAXNUM_PROCESSES):
+    with concurrent.futures.ProcessPoolExecutor(max_workers=Config.MAXNUM_PROCESSES) as executor:
+        for i in range(Config.MAXNUM_PROCESSES):
             future = executor.submit(data_filter,resources_queue,records,htmls_all_cnt)
             futures.add(future)
         for future in concurrent.futures.as_completed(futures):
@@ -189,10 +189,9 @@ def create_process_pool(resources_queue,records,htmls_all_cnt):
             else:
                 logger.error(f"future对象处理文件失败,原因为:{err}")
 
-
-if __name__ == '__main__':
+def main():
     #从路径中获取所有HTML文档的文件名
-    raw_htmls = os.listdir(RAW_HTML_PATH)
+    raw_htmls = os.listdir(Config.RAW_HTML_PATH)
     # 统计所有的文件个数
     htmls_all_cnt = len(raw_htmls)
     resources_queue = multiprocessing.JoinableQueue()  # 资源队列
@@ -214,3 +213,6 @@ if __name__ == '__main__':
 
     resources_queue.join()
     logger.info(f"已完成数据清洗工作，一共处理得到{len(records)}份有效数据文件")
+
+if __name__ == '__main__':
+    main()

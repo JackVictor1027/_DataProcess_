@@ -1,12 +1,10 @@
 import os
-
-from unstructured_inference.logger import logger_onnx
-
 from common.logger_setup import logger
-from file_convert.config import COMMON_OUTPUT_PATH, SCHOOL_SIMPLE, ALL_FILES_PATH
+from file_convert.config import Convert_Config
 import pypandoc
 
-OUTPUT_PATH="./docx2md/"+SCHOOL_SIMPLE
+Config = Convert_Config()
+OUTPUT_PATH=Config.COMMON_OUTPUT_PATH+"docx2md/"+Config.SCHOOL_SIMPLE
 
 def update_records(docx):
     with open(OUTPUT_PATH+"/config/records.txt",'a',encoding='utf-8') as f:
@@ -25,7 +23,7 @@ def docx2md(docx,docx_cnt):
         # 获取文件名，给转换后的md文件命名
         base,ext = os.path.splitext(docx)
         # 将 .doc 文件转换为 .md
-        md_output = pypandoc.convert_file(ALL_FILES_PATH+docx, 'markdown', outputfile=OUTPUT_PATH+'/'+base+".md")
+        md_output = pypandoc.convert_file(Config.ALL_FILES_PATH+docx, 'markdown', outputfile=OUTPUT_PATH+'/'+base+".md")
 
         update_records(docx)
     except Exception as e:
