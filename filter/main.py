@@ -10,8 +10,7 @@ import common
 from common.local_models import query_for_local_model
 from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime
 from file_convert.tools.html2md_custom_markdown import html2md
-from filter.config import RAW_HTML_PATH, ID_AND_CLASS_TAGS, FUZZY_TAGS, LOCAL_MODEL, PROMPT_OF_ATTRS, PURIED_JSON_PATH, \
-    SCHOOL_SIMPLE, MAXNUM_PROCESSES
+from filter.config import Filter_Config
 import markdown
 from common.logger_setup import logger
 from concurrent.futures import ProcessPoolExecutor

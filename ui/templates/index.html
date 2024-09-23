@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <title>我的网页 - htmlpage.cn</title></head>
+        <link rel="stylesheet" href="../static/css/index_plugins.css" type="text/css"/>
+        <link rel="stylesheet" href="../static/css/index_style.css" type="text/css"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<body>
+<div>
+    <style>* {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin-top: 0px;
+        margin-right: 0px;
+        margin-bottom: 0px;
+        margin-left: 0px;
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Roboto, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", "Microsoft Jhenghei", sans-serif;
+    }
+
+    .panel {
+        color: rgb(51, 51, 51);
+        font-weight: 100;
+    }
+
+    .logo path {
+        pointer-events: none;
+        fill: none;
+        stroke-linecap: round;
+        stroke-width: 7;
+        stroke: rgb(255, 255, 255);
+    }
+
+    .description {
+        text-align: center;
+        font-size: 1em;
+        font-weight: 500;
+        line-height: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .wechat-group img {
+        max-width: 220px;
+        height: auto;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-bottom-left-radius: 8px;
+        margin-top: 0px;
+        margin-right: auto;
+        margin-bottom: 0px;
+        margin-left: auto;
+        width: 100%;
+    }
+
+    .welcome-img img {
+        width: 100%;
+    }
+
+    .bg-gradient-primary {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }</style>
+    <div id="default-editor-page__placeholder" class="panel">
+        <section class="wrapper bg-gradient-primary">
+            <div class="container py-18 pt-md-14 pb-md-14">
+                <div class="row text-center">
+                    <div class="col-lg-9 col-xxl-7 mx-auto">
+                        <h3 class="display-1 mb-4">Welcome to the _DataProcess_</h3>
+                        <p class="lead fs-24 lh-sm px-md-5 px-xl-15 px-xxl-10 mb-7">
+                            一个集成了HTML数据清洗和转MD文档功能，旨在生成对机器友好数据的工具</p>
+                    </div><!-- /column -->
+                </div><!-- /.row -->
+                <div class="d-flex justify-content-center"><span></span><span></span></div><!-- /div -->
+                <div class="row mt-10"></div>
+            </div>
+        </section>
+        <section class="wrapper bg-gradient-primary"></section>
+        <div class="container px-4 text-center">
+          <div class="row gx-5">
+            <div class="col">
+             <div class="p-3"><button type="button" class="btn btn-primary btn-lg" onclick="to_filter()">数据清洗</button></div>
+            </div>
+            <div class="col">
+              <div class="p-3"><button type="button" class="btn btn-primary btn-lg" onclick="to_file_convert()">文档转换</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="description">© 2024 JackVictor1027. 版权所有</div>
+    </div>
+</div>
+            <script>
+                function to_filter(){
+                    window.location.href = "{{url_for('filter')}}"
+                }
+                function to_file_convert(){
+                    window.location.href = "{{url_for('file_convert')}}"
+                }
+            </script>
+</body>
+</html>

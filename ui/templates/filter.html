@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ name }}'s Watchlist</title>
+    <link rel="icon" href="../static/images/数据.ico">
+    <link rel="stylesheet" href="../static/css/filter_style.css" type="text/css">
+
+</head>
+<body>
+    <h2>
+        <img class="avatar" alt="Avatar" src="../static/images/头像.png">
+        数据清洗配置信息
+    </h2>
+    <form method="post">
+        <ul class="custom-form">
+<!--            <li>原始HTML文件路径:<input type="text" name="RAW_HTML_PATH" autocomplete="off"></li>-->
+            <label>原始HTML文件路径:</label>
+                <input name="raw_html_path" id="raw_html_path" placeholder="绝对路径:D:/Data/raw_htmls/" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>清洗后JSON的存放路径:</label>
+                <input name="puried_json_path" id="puried_json_path"  placeholder="绝对路径:D/Output/jsons/" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>枚举class,id属性值(在清洗过程中，删去含有指定class,id属性值的HTML标签)</label>
+                <input name="id_and_class_tags" id="id_and_class_tags" placeholder="格式为:xxx,xxx,xxx" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>当前正在使用何种本地模型:</label>
+                <input name="local_model" id="local_model" placeholder="qwen2" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>学校名称:</label>
+                <input name="school_name" id="school_name" placeholder="北京大学" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>学校简写:</label>
+                <input name="school_simple" id="school_simple" placeholder="pku" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>开启进程(请根据实际需求和本机能力来决定):</label>
+                <input name="maxnum_processes" id="maxnum_processes" placeholder="3" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+        </ul>
+          <div class="container">
+            <input type="submit" value="修改" id="myButton" onclick="post_config()" class="rounded-button" />
+          </div>
+    </form>
+    <img alt="Walking Totoro" class="totoro" src="../static/images/totoro.gif">
+    <footer>
+        <small>&copy; 2018 <a href="http://helloflask.com/book/3">HelloFlask</a></small>
+    </footer>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js">
+    function post_config(){
+        // 发起一个post请求
+        axios({
+          method: 'post',
+          url: url_for('/filter/start'),
+            headers:{
+                'Content-Type':'application/json'
+            },
+          data: {
+              Config:{
+                  raw_html_path: document.getElementById("raw_html_path"),
+                  puried_json_path: document.getElementById("puried_json_path"),
+                  id_and_class_tags: document.getElementById("id_and_class_tags"),
+                  local_model: document.getElementById("local_model"),
+                  school_name: document.getElementById("school_name"),
+                  school_simple: document.getElementById("school_simple"),
+                  maxnum_processes: document.getElementById("maxnum_processes")
+              }
+          }
+        }).then(function (response){
+            console.log(response)
+        }).catch(function (error){
+            console.log(error)
+        })
+    }
+</script>
+</body>
+</html>
