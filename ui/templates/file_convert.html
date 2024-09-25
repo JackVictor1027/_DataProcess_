@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ name }} Configuration Center</title>
+    <link rel="icon" href="../static/images/数据.ico">
+    <link rel="stylesheet" href="../static/css/filter_style.css" type="text/css">
+
+</head>
+<body>
+    <h2>
+        <img class="avatar" alt="Avatar" src="../static/images/头像.png">
+        文件转换配置信息
+    </h2>
+    <form method="post" action="/file_convert/update">
+        <ul class="custom-form">
+<!--            <li>原始HTML文件路径:<input type="text" name="RAW_HTML_PATH" autocomplete="off"></li>-->
+            <label>待转换的文档路径:</label>
+                <input name="all_files_path" id="all_files_path" value="{{config.all_files_path}}" placeholder="绝对路径:D:/Data/all_files/" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>清洗后JSON的存放路径:</label>
+                <input name="common_output_path" id="common_output_path" value="{{config.common_output_path}}"  placeholder="绝对路径:D/Output/" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>学校名称:</label>
+                <input name="school_name" id="school_name" value="{{config.school_name}}" placeholder="北京大学" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>学校简写:</label>
+                <input name="school_simple" id="school_simple" value="{{config.school_simple}}" placeholder="pku" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+
+             <label>开启进程(请根据实际需求和本机能力来决定):</label>
+                <input name="maxnum_processes" id="maxnum_processes" value="{{config.maxnum_processes}}" placeholder="3" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"></li>
+        </ul>
+    </form>
+    <div class="container">
+        <button id="submit_update" class="rounded-button" >修改</button>
+    </div>
+        <div class="container">
+        <button id="submit_start" class="rounded-button" >启动</button>
+    </div>
+    <img alt="Walking Totoro" class="totoro" src="../static/images/totoro.gif">
+    <footer>
+        <small>&copy; 2018 <a href="http://helloflask.com/book/3">HelloFlask</a></small>
+    </footer>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    btn = document.getElementById('submit_update')
+    function post_config(){
+        // 发起一个post请求
+        axios({
+          method: 'post',
+          url: "file_convert/update",
+            headers:{
+                'Content-Type':'application/json'
+            },
+          data: {
+              Config:{
+                  all_files_path: document.getElementById("all_files_path").value,
+                  common_output_path: document.getElementById("common_output_path").value,
+                  school_name: document.getElementById("school_name").value,
+                  school_simple: document.getElementById("school_simple").value,
+                  maxnum_processes: document.getElementById("maxnum_processes").value
+              }
+          }
+        }).then(function (response){
+            alert("修改成功")
+            console.log(response)
+        }).catch(function (error){
+            alert("修改失败")
+            console.log(error)
+        })
+    }
+    btn.addEventListener('click',post_config)
+
+    btn1 = document.getElementById('submit_start')
+    function get_start(){
+        // 启动文件转换程序
+        axios.get('/file_convert/start')
+          .then(function (response) {
+            // 处理成功情况
+              alert("转换成功")
+            console.log(response);
+          })
+          .catch(function (error) {
+            // 处理错误情况
+              alert("转换失败")
+            console.log(error);
+          })
+          .finally(function () {
+            // 总是会执行
+          });
+    }
+    btn.addEventListener('click',get_start)
+</script>
+</body>
+</html>
