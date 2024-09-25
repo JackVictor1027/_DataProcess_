@@ -2,7 +2,6 @@ import json
 import multiprocessing
 import os
 
-from sympy.strategies.core import switch
 from tqdm import tqdm
 
 from common.logger_setup import logger

@@ -6,7 +6,6 @@ import os
 from os.path import isfile
 
 import jieba.analyse
-from sympy.codegen.fnodes import intent_inout
 
 from filter.config import Filter_Config
 from file_convert.config import Convert_Config

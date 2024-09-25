@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 from tabulate import tabulate
-from unstructured_inference.logger import logger_onnx
 
 from common.logger_setup import logger
 from file_convert.config import Convert_Config

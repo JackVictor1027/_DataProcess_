@@ -33,8 +33,19 @@ class Filter_Config:
 		config = fc.query.get(1)
 		self.RAW_HTML_PATH = config.raw_html_path
 		self.PURIED_JSON_PATH = config.puried_json_path
-		self.ID_AND_CLASS_TAGS = config.id_and_class_tags
+		self.ID_AND_CLASS_TAGS =  [tag.replace(" ","").replace("\n","").replace("\t","") for tag in config.id_and_class_tags.split(",")]
 		self.LOCAL_MODEL = config.local_model
 		self.SCHOOL_NAME = config.school_name
 		self.SCHOOL_SIMPLE = config.school_simple
 		self.MAXNUM_PROCESSES = config.maxnum_processes
+
+
+def test_handle_tags():
+	ls = """"
+		 footer ,  sidebar , navigation-bar , banner , foot-bar , wrapper header ,	    t-top , c header , f-nav c , wrapper footer , wrapper nav wp-navi , nav ,
+	 			    navbar uk-navbar-transparent uk-sticky , head , foot , header clearfix ,
+	 			    footer clearfix , nav_min showhead , ind_navigationbg , menu-ul , erjicaidan l ,
+	 			    logo_menu_bj
+	"""
+	new_ls =  [tag.replace(" ","").replace("\n","").replace("\t","") for tag in ls.split(",")]
+	print(new_ls)
