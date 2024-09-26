@@ -69,9 +69,48 @@ def generate_attrs(content)->dict:
     attrs = json.loads(response)
     return attrs
 
+def replace_images_with_local_urls(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        def replacement(match):
+            original_url = match.group(1)
+            # 下载图片并获取新的本地路径
+            local_url = save_image(original_url)
+            if local_url:
+                # 构造新的图片标签
+                new_tag = f'![{match.group(0)[2:]}({local_url})'
+                return new_tag
+            else:
+                # 如果上传失败，保留原始标签
+                return match.group(0)
+
+        new_content = image_pattern.sub(replacement, content)
+
+        # 将新内容写回原文件
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(new_content)
+        print(f"成功替换了文件 {file_path} 中的所有图片标签。")
+
+    except FileNotFoundError:
+        print(f"文件 {file_path} 未找到。")
+    except Exception as e:
+        print(f"处理文件时发生错误: {e}")
+
+def handle_wash(html:str):
+    head, ext = os.path.splitext(file_name)
+    md_content = html2md(html_content)
+    # 正则表达式匹配多个换行符，用一个换行符全替换
+    pat = r'\n{2,}'
+    md_content = re.sub(pat, '\n', md_content)
+    replace_images_with_local_urls()
+
 def first_filter(html:str)->str:
     """
-    第一步清洗：链接、图片、JS代码段、注释、指定标签
+    第一步清洗：
+        下载当前页面所有图片至本地
+        链接、JS代码段、注释、指定标签
     """
     try:
         soup = bs4.BeautifulSoup(html,"html.parser")
@@ -81,7 +120,7 @@ def first_filter(html:str)->str:
             s.extract()
 
         # 常见的样式标签
-        multiform_tags = ['img', 'iframe', 'textarea','metadata'] #TODO:考虑保留图片
+        multiform_tags = ['iframe', 'textarea','metadata'] #TODO:考虑保留图片
         for tag in multiform_tags:
             for element in soup.find_all(tag):
                 element.extract()
