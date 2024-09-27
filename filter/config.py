@@ -2,7 +2,7 @@ from db.sql import app,Filter_Config as fc
 
 class Filter_Config:
 	RAW_HTML_PATH="" #原始HTML文档路径
-	PURIED_JSON_PATH="jsons/" #处理最终得到的JSON
+	PURIED_JSON_PATH="jsons/" #处理最终得到的JSON,以及MD
 	ID_AND_CLASS_TAGS = ["footer", "sidebar","navigation-bar","banner","foot-bar","wrapper header",
 				   "t-top","c header","f-nav c","wrapper footer","wrapper nav wp-navi","nav",
 				   "navbar uk-navbar-transparent uk-sticky","head","foot","header clearfix",

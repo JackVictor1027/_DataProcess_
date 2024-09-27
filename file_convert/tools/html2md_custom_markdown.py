@@ -7,9 +7,6 @@ class CustomMarkdownConverter(MarkdownConverter):
     while preserving attributes like colspan and rowspan.
     """
 
-    def convert_img(self, el, text, convert_as_inline):
-        return ''
-
     def _process_element(self, el):
         soup = BeautifulSoup(str(el), 'html.parser')
         for tag in soup.find_all(True):

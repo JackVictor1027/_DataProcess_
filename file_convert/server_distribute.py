@@ -7,12 +7,14 @@ from tqdm import tqdm
 from common.logger_setup import logger
 from common.tools import scan_files, get_current_datetime
 from file_convert.config import Convert_Config
+from file_convert import FileConvert
 from file_convert.docx2md.main import docx2md
 from file_convert.pdf2md.main import pdf2md
 from file_convert.tools.doc2docx import convert_doc_to_docx
 from file_convert.tools.xls2xlsx import convert_xls_to_xlsx
 from file_convert.xlsx2md.main import xlsx2md
 
+FileConvert = FileConvert()
 Config = Convert_Config()
 LOCK = multiprocessing.Lock()
 # Python-Working-Directory:[Project]\\file_convert
@@ -71,18 +73,11 @@ def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
                 continue
             with LOCK:
                 logger.info(f"当前正在转换文件:{file_name}")
-            #获取文件后缀名，分配对应的服务
-            base,ext = os.path.splitext(file_name)
-            match ext:
-                case ".pdf":pdf2md(file_name,ext_dict['.pdf'])
-                case ".doc":__doc2md(file_name,ext_dict['.docx']+ext_dict['.doc'])
-                case ".docx":docx2md(file_name,ext_dict['.docx']+ext_dict['.doc'])
-                case ".xls":__xls2md(file_name,ext_dict['.xlsx']+ext_dict['.xls'])
-                case ".xlsx":xlsx2md(file_name,ext_dict['.xlsx']+ext_dict['.xlsx'])
-                case _:
-                    with LOCK:
-                        logger.info(f"转换失败,此文件类型暂不支持转换:{file_name}")
-                    continue
+            FileConvert.read(Convert_Config.ALL_FILES_PATH.join(file_name))
+                # case _:
+                #     with LOCK:
+                #         logger.info(f"转换失败,此文件类型暂不支持转换:{file_name}")
+                #     continue
             with LOCK:
                 records.add(file_name)
                 # 更新进度条

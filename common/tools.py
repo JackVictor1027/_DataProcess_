@@ -4,15 +4,36 @@ import re,jieba
 from datetime import datetime
 import os
 from os.path import isfile
-
+from urllib.parse import urlparse, urlunparse
 import jieba.analyse
-
+from file_convert.file_convert import FileConvert
 from filter.config import Filter_Config
 from file_convert.config import Convert_Config
 
+FileConvert = FileConvert()
 fc = Filter_Config()
 cc = Convert_Config()
 OUTPUT_JSON_PATH=fc.PURIED_JSON_PATH+fc.SCHOOL_SIMPLE
+
+# 通过解析持有html原URL，以及非持有HTTP链接的图片URL，二者拼接成为一张图片完整的URL
+def recover_url_of_img(html_link:str,origin_url:str):
+    parse_result = urlparse(html_link)
+    # 新的路径部分
+    new_path_segments = origin_url.split("/")
+
+    # 将新的路径部分添加到现有的路径后面
+    new_path = '/'.join(new_path_segments)
+
+    # 重新构建完整的 URL
+    img_url = urlunparse((
+        parse_result.scheme,  # scheme (e.g., http, https)
+        parse_result.netloc,  # netloc (e.g., example.com)
+        new_path,  # path
+        "",  # params (通常为空)
+        "",  # query (查询参数)
+        ""  # fragment (片段标识符)
+    ))
+    return img_url
 
 #将work_path路径下，指定学校的所有处理后文件和记录全部删除，回到任务的初始状态
 # ../file_convert/xlsx2md/   hbfu
@@ -38,7 +59,7 @@ def generate_hash_value(content:str) -> str:
     return hash_value_content.hexdigest()
 
 def extract_keywords(content:str)->str:
-    content = re.sub(r'<[^>]+>', '', content).strip()
+    content = re.sub(FileConvert.md_image_pattern, '', content).strip()
     tags = jieba.analyse.extract_tags(sentence=content, topK=fc.TOP_K)
 
     return str(tags)

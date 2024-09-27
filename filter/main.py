@@ -8,17 +8,19 @@ from bs4 import Comment, element
 from tqdm import tqdm
 import common
 from common.local_models import query_for_local_model
-from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime
+from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime, recover_url_of_img
 from file_convert.tools.html2md_custom_markdown import html2md
 from filter.config import Filter_Config
 import markdown
 from common.logger_setup import logger
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
+from file_convert.file_convert import FileConvert
 from multiprocessing import Queue,Process,Lock
 
+FileConvert = FileConvert()
 Config = Filter_Config()
-OUTPUT_JSON_PATH=Config.PURIED_JSON_PATH+Config.SCHOOL_SIMPLE
+OUTPUT_JSON_PATH:str=Config.PURIED_JSON_PATH+Config.SCHOOL_SIMPLE
 LOCK = multiprocessing.Lock()
 
 #TODO 可以独立出去的一个方法
@@ -66,116 +68,59 @@ def generate_attrs(content)->dict:
     }
     attrs = query_for_local_model(data)
     response = json.loads(attrs.text)['response']
-    attrs = json.loads(response)
+    attrs = json.loads(response) # TODO bug
     return attrs
 
-def replace_images_with_local_urls(file_path):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-
-        def replacement(match):
-            original_url = match.group(1)
+def replace_images_with_local_urls(content,attrs,html_name):
+    def replacement(match):
+        original_url:str = match.group(1)
+        # 解析标签
+        if original_url.startswith("http") or original_url.startswith("https"):
             # 下载图片并获取新的本地路径
-            local_url = save_image(original_url)
-            if local_url:
-                # 构造新的图片标签
-                new_tag = f'![{match.group(0)[2:]}({local_url})'
-                return new_tag
-            else:
-                # 如果上传失败，保留原始标签
-                return match.group(0)
+            local_url = FileConvert.save_image(original_url, os.path.join(OUTPUT_JSON_PATH, attrs["title"]))
+        else:
+            # 通过查询映射表，还原得到原html链接
+            html_link = get_html_link(html_name)
+            img_url = recover_url_of_img(html_link,original_url)
+            local_url = FileConvert.save_image(img_url, os.path.join(OUTPUT_JSON_PATH, attrs["title"]))
+        if local_url:
+            # 构造新的图片标签
+            new_tag = f'![{match.group(0)[2:]}({local_url})'
+            return new_tag
+        else:
+            # 如果上传失败，保留原始标签
+            return match.group(0)
+    new_content = FileConvert.md_image_pattern.sub(replacement, content) # 调用replacement函数，并将content作为参数传递过去
+    return new_content
 
-        new_content = image_pattern.sub(replacement, content)
-
-        # 将新内容写回原文件
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(new_content)
-        print(f"成功替换了文件 {file_path} 中的所有图片标签。")
-
-    except FileNotFoundError:
-        print(f"文件 {file_path} 未找到。")
-    except Exception as e:
-        print(f"处理文件时发生错误: {e}")
-
-def handle_wash(html:str):
-    head, ext = os.path.splitext(file_name)
+def auto_wash(html_content:str):
+    """
+        使用markdownify库(不借助大模型效率更高)，将html转为md，过程中解析表格
+    :param html_content:
+    :return:
+    """
     md_content = html2md(html_content)
     # 正则表达式匹配多个换行符，用一个换行符全替换
     pat = r'\n{2,}'
     md_content = re.sub(pat, '\n', md_content)
-    replace_images_with_local_urls()
 
-def first_filter(html:str)->str:
+    return md_content
+
+def attr_process(content:str,html_name)->str:
     """
-    第一步清洗：
-        下载当前页面所有图片至本地
-        链接、JS代码段、注释、指定标签
-    """
-    try:
-        soup = bs4.BeautifulSoup(html,"html.parser")
-
-        # 删去所有的<script> <style>标签与内部内容
-        for s in soup(["script", "style"]):
-            s.extract()
-
-        # 常见的样式标签
-        multiform_tags = ['iframe', 'textarea','metadata'] #TODO:考虑保留图片
-        for tag in multiform_tags:
-            for element in soup.find_all(tag):
-                element.extract()
-
-        # 删去所有的注释文本
-        comments = soup.findAll(string = lambda text:isinstance(text, Comment))
-        for comment in comments:
-            comment.extract()
-    except Exception as e:
-        #TODO 异常处理
-        return "None"
-    return soup.prettify()
-
-def second_wash(html:str)->str:
-    """
-        第二步清洗：模糊匹配页眉页脚，去除所有内嵌样式，通过枚举筛去带有id,class属性的标签
-    """
-    try:
-        # 枚举删去繁琐的css样式
-        soup = bs4.BeautifulSoup(html,"html.parser")
-        tags = Config.ID_AND_CLASS_TAGS
-        for tag in tags:
-            [element.extract() for element in soup.find_all(class_=tag)]
-            [element.extract() for element in soup.find_all(id=tag)]
-        #模糊匹配
-        tags= Config.FUZZY_TAGS
-        for tag in tags:
-            [element.extract() for element in soup.find_all(class_=re.compile(tag))]
-            [element.extract() for element in soup.find_all(id=re.compile(tag))]
-        # 删去所有的标签属性
-        for tag in soup.find_all(True):
-            tag.attrs = {}
-    except Exception as e:
-        return "None"
-    return soup.prettify()
-
-def third_process(html:str)->str:
-    """
-        第三步处理：使用markdownify库(不借助大模型效率更高)，将html转为md，过程中解析表格
+        使用markdownify库(不借助大模型效率更高)，将html转为md，过程中解析表格
         接着，我们开始按照指定的格式为每一篇文章，构建相应的JSON
         最后，使用上一步中本地大模型生成的标题对其命名后，保存为json最终文件。
         为了日志记录，我们需要返回文章标题
     """
-    md_content = html2md(html)
-    # 正则表达式匹配多个换行符，用一个换行符全替换
-    pat = r'\n{2,}'
-    md_content = re.sub(pat,'\n',md_content)
-    hash_value = generate_hash_value(md_content)
-    keywords = extract_keywords(markdown.markdown(html)) #TODO:冗余操作？
+    hash_value = generate_hash_value(content)
+    keywords = extract_keywords(content)
+    attrs = generate_attrs(content)
+    # 下载图片
+    replace_images_with_local_urls(content,attrs,html_name)
+    # 保存到每个md子节目，md与json是平级的，img都在下一级
+    save_as_json(attrs["title"],attrs["publish_date"],keywords,attrs["category"],content,hash_value)
 
-    """
-        第四步-大模型
-    """
-    attrs = generate_attrs(md_content)
-    save_as_json(attrs["title"],attrs["publish_date"],keywords,attrs["category"],md_content,hash_value)
     return attrs['title']
 
 def data_filter(resources_queue,records,htmls_all_cnt):
@@ -192,9 +137,8 @@ def data_filter(resources_queue,records,htmls_all_cnt):
                 logger.info(f"{multiprocessing.current_process().name}当前正在对文件:{raw_html}进行清洗工作")
             with open(os.path.join(Config.RAW_HTML_PATH,raw_html),'r',encoding='utf-8') as f:
                 raw_content = f.read()
-            _html1 = first_filter(raw_content) #第一步清洗
-            _html2 = second_wash(_html1) #第二步清洗
-            third_process(_html2) #第三步处理并对文本重排进行格式化,得到最终的纯净MD
+            md_content = auto_wash(raw_content)
+            attr_process(md_content,raw_html) #第三步处理并对文本重排进行格式化,得到最终的纯净MD
 
             with LOCK:
                 records.add(raw_html)
