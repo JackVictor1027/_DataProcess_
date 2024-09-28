@@ -67,21 +67,21 @@ def __xls2md(xls_name,xlsx_cnt):
 def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
     pbar = tqdm(initial=len(records),total=all_cnt_tasks)
     while True:
-        file_name = files_queue.get()
+        file_name:str = files_queue.get()
         try:
             if file_name in records or file_name+"x" in records: # TODO 查重异常
                 continue
-            with LOCK:
-                logger.info(f"当前正在转换文件:{file_name}")
-            FileConvert.read(Convert_Config.ALL_FILES_PATH.join(file_name))
-                # case _:
-                #     with LOCK:
-                #         logger.info(f"转换失败,此文件类型暂不支持转换:{file_name}")
-                #     continue
-            with LOCK:
-                records.add(file_name)
-                # 更新进度条
-                pbar.update(1)
+            logger.info(f"当前正在转换文件:{file_name}")
+            if file_name.endswith(".pdf"):
+                pdf2md(file_name)
+            else:
+                md_content = FileConvert.read(Convert_Config.ALL_FILES_PATH.join(file_name)) # 对pdf使用原有的MinerU来实现
+                base,ext = os.path.splitext(file_name)
+                with open(Config.COMMON_OUTPUT_PATH+'/'+base+".md",'w',encoding="utf-8") as f:
+                    f.write(md_content)
+            records.add(file_name)
+            # 更新进度条
+            pbar.update(1)
         except Exception as e:
             # 记录失败次数
             with LOCK:

@@ -18,11 +18,7 @@ class Filter_Config:
 	PROMPT_OF_ATTRS='''
 					阅读以下的HTML文档，阅读文章前1000字，生成一个不多于35字的标题title，分析文章属于何种类别category，并提取出本篇文章的发布时间publish_date。
 					结果必须以如下json格式返回,请不要有其他的文字:
-					{
-						"title":title,
-						"category":category,
-						"publish_date":publish_data,
-					}
+					{"title":title,"category":category,"publish_date":publish_date}
 					如果遭遇无法生成的情况，给对应的属性值赋为null即可:\n
 				'''
 	MAXNUM_PROCESSES = 3

@@ -8,7 +8,8 @@ from bs4 import Comment, element
 from tqdm import tqdm
 import common
 from common.local_models import query_for_local_model
-from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime, recover_url_of_img
+from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime, recover_url_of_img, \
+    save_as_md
 from file_convert.tools.html2md_custom_markdown import html2md
 from filter.config import Filter_Config
 import markdown
@@ -71,7 +72,12 @@ def generate_attrs(content)->dict:
     attrs = json.loads(response) # TODO bug
     return attrs
 
-def replace_images_with_local_urls(content,attrs,html_name):
+def get_html_link(html_name:str)->str:
+    with open("html_urls_mapping.json","r") as f:
+        url_table = json.loads(f.read())
+    return url_table[html_name]
+
+def replace_images_with_local_urls(content,attrs,html_name)->str:
     def replacement(match):
         original_url:str = match.group(1)
         # 解析标签
@@ -80,12 +86,15 @@ def replace_images_with_local_urls(content,attrs,html_name):
             local_url = FileConvert.save_image(original_url, os.path.join(OUTPUT_JSON_PATH, attrs["title"]))
         else:
             # 通过查询映射表，还原得到原html链接
+            # TODO bug
+            compl_list = original_url.split(" ")
+            original_url = compl_list[0]
             html_link = get_html_link(html_name)
             img_url = recover_url_of_img(html_link,original_url)
             local_url = FileConvert.save_image(img_url, os.path.join(OUTPUT_JSON_PATH, attrs["title"]))
         if local_url:
             # 构造新的图片标签
-            new_tag = f'![{match.group(0)[2:]}({local_url})'
+            new_tag = f'![{local_url[0]}]({local_url[1]})'
             return new_tag
         else:
             # 如果上传失败，保留原始标签
@@ -117,9 +126,10 @@ def attr_process(content:str,html_name)->str:
     keywords = extract_keywords(content)
     attrs = generate_attrs(content)
     # 下载图片
-    replace_images_with_local_urls(content,attrs,html_name)
+    content = replace_images_with_local_urls(content,attrs,html_name)
     # 保存到每个md子节目，md与json是平级的，img都在下一级
     save_as_json(attrs["title"],attrs["publish_date"],keywords,attrs["category"],content,hash_value)
+    save_as_md(attrs["title"],content)
 
     return attrs['title']
 

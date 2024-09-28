@@ -10,10 +10,11 @@ from docx import Document
 from pptx import Presentation
 
 from common.logger_setup import logger
+from file_convert.pdf2md.main import pdf2md
 
 
 class FileConvert:
-    md_image_pattern = re.compile(r'\[([^\]]+)\]\(([a-zA-Z0-9:/._~#-]+)?\)')
+    md_image_pattern = re.compile(r'!\[.*?\]\((.*?)\)')
     html_image_pattern = re.compile(r'<img\s+[^>]*?src=["\']([^"\']*)["\'][^>]*>')
     """封装所有文件读取操作。"""
 
@@ -46,6 +47,12 @@ class FileConvert:
         md5.update(uri.encode('utf8'))
         uuid = md5.hexdigest()[0:6]
         filename = uuid + uri[uri.rfind('.'):]
+        # 定义非法字符的正则表达式
+        illegal_chars = r'["\\/*?<>|:]+'
+        # 使用正则表达式替换非法字符
+        filename = re.sub(illegal_chars, '', filename)
+
+        relative_path = './images/'+filename
         image_path = os.path.join(images_dir, filename)
 
         logger.info('下载 {}'.format(uri))
@@ -61,7 +68,7 @@ class FileConvert:
         except Exception as e:
             logger.error(f"图片下载失败:uri{uri},错误原因:{e}")
             return None, None
-        return uuid, image_path
+        return uuid, relative_path
 
     def get_type(self, filepath: str):
         """根据URI后缀获取文件类型。"""
@@ -130,22 +137,7 @@ class FileConvert:
     def read_pdf(self, filepath: str):
         """读取PDF文件并序列化表格。"""
         # TODO
-        text = ''
-        with fitz.open(filepath) as pages:
-            for page in pages:
-                text += page.get_text()
-                tables = page.find_tables()
-                for table in tables:
-                    tablename = '_'.join(
-                        filter(lambda x: x is not None and 'Col' not in x,
-                               table.header.names))
-                    pan = table.to_pandas()
-                    json_text = pan.dropna(axis=1).to_json(force_ascii=False)
-                    text += tablename
-                    text += '\n'
-                    text += json_text
-                    text += '\n'
-        return text
+        pdf2md(filepath)
 
     def read_excel(self, filepath: str):
         """读取Excel文件并转换为JSON格式。"""
@@ -231,7 +223,7 @@ class FileConvert:
                     text += f.read()
 
         except Exception as e:
-            print.error((filepath, str(e)))
+            logger.error((filepath, str(e)))
             return '', e
 
         if file_type != 'code':

@@ -13,7 +13,7 @@ from file_convert.config import Convert_Config
 FileConvert = FileConvert()
 fc = Filter_Config()
 cc = Convert_Config()
-OUTPUT_JSON_PATH=fc.PURIED_JSON_PATH+fc.SCHOOL_SIMPLE
+OUTPUT_JSON_PATH:str=fc.PURIED_JSON_PATH+fc.SCHOOL_SIMPLE
 
 # 通过解析持有html原URL，以及非持有HTTP链接的图片URL，二者拼接成为一张图片完整的URL
 def recover_url_of_img(html_link:str,origin_url:str):
@@ -82,12 +82,20 @@ def save_as_json(title:str,publish_date:str,keywords:str,category:str,md_content
         "hashValue": hashValue,
     }
     try:
-        with open(OUTPUT_JSON_PATH + "/"+title + ".json", "w", encoding='utf-8') as f:
+        with open(OUTPUT_JSON_PATH+'/'+title+'/'+title + ".json", "w", encoding='utf-8') as f:
             # f.write(json_content)
             json.dump(json_content, f, indent=4, ensure_ascii=False)
     except Exception as e:
         #TODO 异常处理
-        pass
+        raise e
+
+def save_as_md(title:str,md_content:str):
+    try:
+        with open(OUTPUT_JSON_PATH+'/'+title+'/'+title + ".md", "w", encoding='utf-8') as f:
+            f.write(md_content)
+    except Exception as e:
+        #TODO 异常处理
+        raise e
 
 def scan_files(dir,extensions)->dict:
     """
