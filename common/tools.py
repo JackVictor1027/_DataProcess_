@@ -3,16 +3,12 @@ import json
 import re,jieba
 from datetime import datetime
 import os
-from os.path import isfile
 from urllib.parse import urlparse, urlunparse
 import jieba.analyse
-from file_convert.file_convert import FileConvert
-from filter.config import Filter_Config
-from file_convert.config import Convert_Config
 
-FileConvert = FileConvert()
+from filter.config import Filter_Config
+
 fc = Filter_Config()
-cc = Convert_Config()
 OUTPUT_JSON_PATH:str=fc.PURIED_JSON_PATH+fc.SCHOOL_SIMPLE
 
 # 通过解析持有html原URL，以及非持有HTTP链接的图片URL，二者拼接成为一张图片完整的URL
@@ -58,8 +54,8 @@ def generate_hash_value(content:str) -> str:
     # 返回哈希值
     return hash_value_content.hexdigest()
 
-def extract_keywords(content:str)->str:
-    content = re.sub(FileConvert.md_image_pattern, '', content).strip()
+def extract_keywords(content:str, md_image_pattern: re.Pattern[str])->str:
+    content = re.sub(md_image_pattern, '', content).strip()
     tags = jieba.analyse.extract_tags(sentence=content, topK=fc.TOP_K)
 
     return str(tags)
@@ -82,16 +78,22 @@ def save_as_json(title:str,publish_date:str,keywords:str,category:str,md_content
         "hashValue": hashValue,
     }
     try:
-        with open(OUTPUT_JSON_PATH+'/'+title+'/'+title + ".json", "w", encoding='utf-8') as f:
+        output_path = OUTPUT_JSON_PATH+'/'+title+'/'
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        with open(output_path+title + ".json", "w", encoding='utf-8') as f:
             # f.write(json_content)
             json.dump(json_content, f, indent=4, ensure_ascii=False)
     except Exception as e:
         #TODO 异常处理
         raise e
 
-def save_as_md(title:str,md_content:str):
+def save_as_md(output_path:str,title:str,md_content:str):
     try:
-        with open(OUTPUT_JSON_PATH+'/'+title+'/'+title + ".md", "w", encoding='utf-8') as f:
+        output_path = output_path+'/'+title+'/'
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        with open(output_path+title + ".md", "w", encoding='utf-8') as f:
             f.write(md_content)
     except Exception as e:
         #TODO 异常处理
@@ -114,13 +116,3 @@ def scan_files(dir,extensions)->dict:
             else:
                 ext_dict[ext]=1
     return ext_dict
-
-def test_scan_files():
-    path = "D:/TechDream/AI/AI_LLM_query/data/hbfu/files/lib.hbfu.edu.cn"
-    d = scan_files(path,cc.CONVERT_EXTENSIONS)
-    print(d)
-
-def test_restart():
-    work_path = "../file_convert/pdf2md/"
-    school = fc.SCHOOL_SIMPLE
-    restart(work_path,school)

@@ -6,13 +6,8 @@ from tqdm import tqdm
 
 from common.logger_setup import logger
 from common.tools import scan_files, get_current_datetime
-from file_convert.config import Convert_Config
+from config import Convert_Config
 from file_convert import FileConvert
-from file_convert.docx2md.main import docx2md
-from file_convert.pdf2md.main import pdf2md
-from file_convert.tools.doc2docx import convert_doc_to_docx
-from file_convert.tools.xls2xlsx import convert_xls_to_xlsx
-from file_convert.xlsx2md.main import xlsx2md
 
 FileConvert = FileConvert()
 Config = Convert_Config()
@@ -48,20 +43,6 @@ def logging_failed(file_name:str):
     with open(file_path,'w',encoding='utf-8') as f:
         json.dump(data,f,indent=4,ensure_ascii=False)
 
-def __doc2md(doc_name,docx_cnt):
-    doc_path = Config.ALL_FILES_PATH+doc_name
-    docx_path = doc_path+'x'
-    docx_name = doc_name+'x'
-    convert_doc_to_docx(doc_path,docx_path)
-    docx2md(docx_name,docx_cnt)
-
-def __xls2md(xls_name,xlsx_cnt):
-    xls_path = Config.ALL_FILES_PATH+xls_name
-    xlsx_path = xls_path+'x'
-    xlsx_name = xls_name+'x'
-    convert_xls_to_xlsx(xls_path,xlsx_path)
-    xlsx2md(xlsx_name,xlsx_cnt)
-
 # TODO 主控制程序和日志记录程序写在这里，失败和成功信息记录就写在各转换目录下
 # 这是主控制程序，宏观来看，主要追踪当前正在处理哪些文件，目前总任务的进度在哪里
 def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
@@ -72,16 +53,11 @@ def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
             if file_name in records or file_name+"x" in records: # TODO 查重异常
                 continue
             logger.info(f"当前正在转换文件:{file_name}")
-            if file_name.endswith(".pdf"):
-                pdf2md(file_name)
-            else:
-                md_content = FileConvert.read(Convert_Config.ALL_FILES_PATH.join(file_name)) # 对pdf使用原有的MinerU来实现
-                base,ext = os.path.splitext(file_name)
-                with open(Config.COMMON_OUTPUT_PATH+'/'+base+".md",'w',encoding="utf-8") as f:
-                    f.write(md_content)
+            FileConvert.convert(os.path.join(Config.ALL_FILES_PATH,file_name),file_name) # 转换并保存
             records.add(file_name)
             # 更新进度条
             pbar.update(1)
+
         except Exception as e:
             # 记录失败次数
             with LOCK:

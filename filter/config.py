@@ -1,8 +1,8 @@
 from db.sql import app,Filter_Config as fc
 
 class Filter_Config:
-	RAW_HTML_PATH="" #原始HTML文档路径
-	PURIED_JSON_PATH="jsons/" #处理最终得到的JSON,以及MD
+	RAW_HTML_PATH:str="" #原始HTML文档路径
+	PURIED_JSON_PATH:str="jsons/" #处理最终得到的JSON,以及MD
 	ID_AND_CLASS_TAGS = ["footer", "sidebar","navigation-bar","banner","foot-bar","wrapper header",
 				   "t-top","c header","f-nav c","wrapper footer","wrapper nav wp-navi","nav",
 				   "navbar uk-navbar-transparent uk-sticky","head","foot","header clearfix",
@@ -17,8 +17,7 @@ class Filter_Config:
 	SCHOOL_SIMPLE=""
 	PROMPT_OF_ATTRS='''
 					阅读以下的HTML文档，阅读文章前1000字，生成一个不多于35字的标题title，分析文章属于何种类别category，并提取出本篇文章的发布时间publish_date。
-					结果必须以如下json格式返回,请不要有其他的文字:
-					{"title":title,"category":category,"publish_date":publish_date}
+					结果必须以如下json格式返回,请不要有其他的文字:{"title":title,"category":category,"publish_date":publish_date}
 					如果遭遇无法生成的情况，给对应的属性值赋为null即可:\n
 				'''
 	MAXNUM_PROCESSES = 3
