@@ -1,14 +1,8 @@
-from db.sql import app,Filter_Config as fc
+from db.sql import Filter_Config as fc
 
 class Filter_Config:
 	RAW_HTML_PATH:str="" #原始HTML文档路径
 	PURIED_JSON_PATH:str="jsons/" #处理最终得到的JSON,以及MD
-	ID_AND_CLASS_TAGS = ["footer", "sidebar","navigation-bar","banner","foot-bar","wrapper header",
-				   "t-top","c header","f-nav c","wrapper footer","wrapper nav wp-navi","nav",
-				   "navbar uk-navbar-transparent uk-sticky","head","foot","header clearfix",
-				   "footer clearfix","nav_min showhead","ind_navigationbg","menu-ul","erjicaidan l",
-				   "logo_menu_bj"
-				   ]
 	FUZZY_TAGS = ["foot","head"] #模糊匹配标签
 	TOP_K=5 # 使用jieba分词进行词频排名后，需要返回几个权重最大的词
 	LOCAL_MODEL="qwen2" #使用何种本地大模型进行文章属性的生成
@@ -28,19 +22,7 @@ class Filter_Config:
 		config = fc.query.get(1)
 		self.RAW_HTML_PATH = config.raw_html_path
 		self.PURIED_JSON_PATH = config.puried_json_path
-		self.ID_AND_CLASS_TAGS =  [tag.replace(" ","").replace("\n","").replace("\t","") for tag in config.id_and_class_tags.split(",")]
 		self.LOCAL_MODEL = config.local_model
 		self.SCHOOL_NAME = config.school_name
 		self.SCHOOL_SIMPLE = config.school_simple
 		self.MAXNUM_PROCESSES = config.maxnum_processes
-
-
-def test_handle_tags():
-	ls = """"
-		 footer ,  sidebar , navigation-bar , banner , foot-bar , wrapper header ,	    t-top , c header , f-nav c , wrapper footer , wrapper nav wp-navi , nav ,
-	 			    navbar uk-navbar-transparent uk-sticky , head , foot , header clearfix ,
-	 			    footer clearfix , nav_min showhead , ind_navigationbg , menu-ul , erjicaidan l ,
-	 			    logo_menu_bj
-	"""
-	new_ls =  [tag.replace(" ","").replace("\n","").replace("\t","") for tag in ls.split(",")]
-	print(new_ls)

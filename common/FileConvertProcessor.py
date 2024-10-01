@@ -9,11 +9,14 @@ from bs4 import BeautifulSoup
 from docx import Document
 from pptx import Presentation
 import re
+import win32com.client
 
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 from common.local_models import query_for_local_model
+from common.logger_setup import logger
 from common.tools import generate_hash_value, extract_keywords, save_as_json, save_as_md
 from filter.config import Filter_Config
-from config import Convert_Config
+from file_convert.config import Convert_Config
 
 FilterConfig = Filter_Config()
 ConvertConfig = Convert_Config()
@@ -29,7 +32,7 @@ class FileConvert:
         self.text_suffix = ['.txt', '.text']
         self.excel_suffix = ['.xlsx', '.xls', '.csv']
         self.pdf_suffix = '.pdf'
-        self.ppt_suffix = '.pptx'
+        self.ppt_suffix = ['.pptx','.ppt']
         self.html_suffix = ['.html', '.htm', '.shtml', '.xhtml']
         self.word_suffix = ['.docx', '.doc']
         self.normal_suffix = [self.md_suffix
@@ -38,7 +41,7 @@ class FileConvert:
                              ] + self.word_suffix + [self.ppt_suffix
                                                      ] + self.html_suffix
 
-    def convert(self, filepath: str,file_name:str):
+    def convert(self, filepath: str,file_name:str)->str:
         """转换文件格式。"""
         if not os.path.isabs(filepath):
             raise ValueError("File path must be an absolute path.")
@@ -46,19 +49,28 @@ class FileConvert:
         file_type = self.get_type(filepath)
         file_name = os.path.splitext(file_name)[0]
         if file_type == "md":
-            return filepath
+            with open(filepath,'r',encoding='utf-8') as f:
+                markdown_content = f.read()
+            output_path = os.path.join(OUTPUT_FMD_PATH, "md", ConvertConfig.SCHOOL_SIMPLE)
+            save_as_md(output_path,file_name,markdown_content)
+            return "md"
         elif file_type == "pdf":
-            return self.convert_pdf(filepath,file_name)
+            self.convert_pdf(filepath, file_name)
+            return "pdf2md"
         elif file_type == "excel":
-            return self.convert_excel(filepath,file_name)
+            self.convert_excel(filepath, file_name)
+            return "xlsx2md"
         elif file_type == "word":
-            return self.convert_word(filepath,file_name)
+            self.convert_word(filepath, file_name)
+            return "docx2md"
         elif file_type == "ppt":
-            return self.convert_ppt(filepath,file_name)
+            self.convert_ppt(filepath, file_name)
+            return "pptx2md"
         elif file_type == "html":
             return self.convert_html(filepath,file_name)
         elif file_type == "text":
-            return self.convert_text(filepath,file_name)
+            self.convert_text(filepath, file_name)
+            return "txt2md"
         else:
             return None
 
@@ -71,8 +83,9 @@ class FileConvert:
         if filepath.endswith(self.md_suffix):
             return 'md'
 
-        if filepath.endswith(self.ppt_suffix):
-            return 'ppt'
+        for suffix in self.ppt_suffix:
+            if filepath.endswith(suffix):
+                return 'ppt'
 
         for suffix in self.text_suffix:
             if filepath.endswith(suffix):
@@ -116,6 +129,8 @@ class FileConvert:
                     image_name = f"page_{page_num}_img_{img_index}.png"
                     self.save_image(image_bytes, image_name,img_path)
                     text += f"![image](images/{image_name})\n\n"
+        text = re.sub(r'(\S)\n(\S)', r'\1 \2', text)  # 移除单词中间的换行符
+        text = re.sub(r'\n{2,}', '\n\n', text)  # 将多个连续的换行符缩减为两个
         save_as_md(output_path,pdf_name,text)
         return text
 
@@ -151,7 +166,9 @@ class FileConvert:
         return markdown_content
 
     def convert_ppt(self, filepath: str,ppt_name:str) -> str:
-        """读取PPT文件并转换为Markdown格式。"""
+        """仅接受pptx格式,读取PPT文件并转换为Markdown格式。"""
+        if filepath.endswith(".ppt"):
+            filepath = self.temp_to_pptx(filepath, ppt_name)
         presentation = Presentation(filepath)
         markdown_content = ""
         output_path = os.path.join(OUTPUT_FMD_PATH,"pptx2md",ConvertConfig.SCHOOL_SIMPLE)
@@ -164,7 +181,7 @@ class FileConvert:
                     continue
                 for paragraph in shape.text_frame.paragraphs:
                     markdown_content += f"{paragraph.text}\n\n"
-                if shape.shape_type == 13:  # Picture
+                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:  # Picture
                     image = shape.image
                     image_bytes = image.blob
                     image_name = f"slide_{slide_num}_img.png"
@@ -241,3 +258,26 @@ class FileConvert:
         attrs = self.generate_attrs(content)
 
         return attrs
+    def temp_to_pptx(self,filepath:str,file_name)->str:
+        # 创建PowerPoint应用程序对象
+        global presentation
+        powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+        # 设置为不可见模式
+        powerpoint.Visible = 0  # 可以设置为0来隐藏窗口
+
+        try:
+            # 打开原始.ppt文件
+            presentation = powerpoint.Presentations.Open(filepath)
+            output_path = os.path.join(OUTPUT_FMD_PATH, "pptx",ConvertConfig.SCHOOL_SIMPLE,"temp_pptx")
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            output_file = output_path+"/"+file_name+".pptx"
+            # 保存为.pptx格式
+            presentation.SaveAs(output_file, 24)  # 24代表.pptx格式
+        finally:
+            # 关闭演示文稿并退出PowerPoint
+            presentation.Close()
+            powerpoint.Quit()
+
+        logger.info(f"已将ppt:{file_name}成功转换为pptx:{output_file}")
+        return output_file

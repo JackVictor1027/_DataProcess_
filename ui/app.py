@@ -1,6 +1,7 @@
-import sys,os
+import os
+import sys
 
-from flask import Flask, url_for, render_template, request
+from flask import render_template, request
 
 # 获取当前脚本的绝对路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +31,6 @@ def update_filter():
     Config = Filter_Config.query.get(1)
     Config.raw_html_path = Info_update["raw_html_path"]
     Config.puried_json_path = Info_update["puried_json_path"]
-    Config.id_and_class_tags = Info_update["id_and_class_tags"]
     Config.local_model = Info_update["local_model"]
     Config.school_name = Info_update["school_name"]
     Config.school_simple = Info_update["school_simple"]

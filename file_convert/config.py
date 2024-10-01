@@ -10,7 +10,7 @@ class Convert_Config:
     SCHOOL_NAME=""
     SCHOOL_SIMPLE=""
 
-    WORK_DIRS = ['docx2md/','pdf2md/','xlsx2md/']
+    WORK_DIRS = ['docx2md/','pdf2md/','xlsx2md/','pptx2md/','txt2md/','md/']
 
     CONVERT_EXTENSIONS=['.pdf','.doc','.docx','.xls','.xlsx']
 

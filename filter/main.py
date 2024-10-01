@@ -5,10 +5,9 @@ import os
 
 from tqdm import tqdm
 
-from common.local_models import query_for_local_model
 from common.logger_setup import logger
-from common.tools import generate_hash_value, extract_keywords, save_as_json, get_current_datetime, save_as_md
-from file_convert.file_convert import FileConvert
+from common.tools import get_current_datetime
+from common.FileConvertProcessor import FileConvert
 from filter.config import Filter_Config
 
 FileConvert = FileConvert()

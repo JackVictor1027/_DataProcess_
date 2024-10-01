@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from common.logger_setup import logger
 from common.tools import scan_files, get_current_datetime
-from config import Convert_Config
-from file_convert import FileConvert
+from .config import Convert_Config
+from common.FileConvertProcessor import FileConvert
 
 FileConvert = FileConvert()
 Config = Convert_Config()
@@ -34,6 +34,11 @@ def init()->(set,set):
                 fails_set = json.load(f)
     return (records_set,fails_set)
 
+def update_records(file_name:str,handle_mode:str):
+    path = os.path.join(Config.COMMON_OUTPUT_PATH,handle_mode,Config.SCHOOL_SIMPLE,"config")+"/records.txt"
+    with open(path,'a',encoding='utf-8') as f:
+        f.write(file_name+"\n")
+
 def logging_failed(file_name:str):
     file_path = 'logging_failed.json'
     cur_time = get_current_datetime()
@@ -53,14 +58,16 @@ def server_distribute(files_queue,ext_dict,records,fails:int,all_cnt_tasks):
             if file_name in records or file_name+"x" in records: # TODO 查重异常
                 continue
             logger.info(f"当前正在转换文件:{file_name}")
-            FileConvert.convert(os.path.join(Config.ALL_FILES_PATH,file_name),file_name) # 转换并保存
-            records.add(file_name)
+            file_type = FileConvert.convert(os.path.join(Config.ALL_FILES_PATH,file_name),file_name) # 转换并保存,并返回文件的类型
+
             # 更新进度条
             pbar.update(1)
-
+            update_records(file_name,file_type)
+            records.add(file_name)
         except Exception as e:
             # 记录失败次数
             with LOCK:
+                logging_failed(file_name)
                 logger.error(f"文件:{file_name}转换失败,失败原因为:{e}")
         finally:
             files_queue.task_done()
@@ -90,7 +97,9 @@ def main():
         files_queue.put(file)
 
     files_queue.join()
-    logger.info(f'已完成文档转换工作，一共处理得到{len(files_queue)}份MD文档')
+    pbar = tqdm(initial=len(records), total=all_cnt_tasks)
+    pbar.refresh()
+    logger.info(f'已完成文档转换工作，一共处理得到{len(records)}份MD文档')
 
 if __name__ == '__main__':
     main()
