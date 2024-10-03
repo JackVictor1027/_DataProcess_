@@ -16,26 +16,37 @@ OUTPUT_JSON_PATH:str=Config.PURIED_JSON_PATH+Config.SCHOOL_SIMPLE
 LOCK = multiprocessing.Lock()
 
 #TODO 可以独立出去的一个方法
-def init()->(set,set):
+def init()->(set,set,set):
     #检查目录是否存在，如果不存在就创建
     if not os.path.exists(OUTPUT_JSON_PATH):
         # 处理成功记录和失败记录配置文件
         os.makedirs(OUTPUT_JSON_PATH+"/config")
         file = open(OUTPUT_JSON_PATH+"/config/records.txt", 'w')
         file.close()
+
         empty_data={}
         with open(OUTPUT_JSON_PATH+"/config/logging_failed.json", 'w',encoding='utf-8') as f:
             json.dump(empty_data, f)
-        return (set(),set())
+
+        # 根据Config指定的学校简写,从磁盘中读取对应的para_hash.txt
+        file = open(OUTPUT_JSON_PATH+"/config/para_hash.txt",'w')
+        file.close()
+        #读取完毕
+        return (set(),set(),set())
     else:
         finished_set = set()
+        para_set = set()  #文段去重集合
         # 将所有已经处理过的文件的文件名以集合set形式装入内存
         with open(OUTPUT_JSON_PATH + "/config/records.txt", 'r', encoding='utf-8') as f:
             for line in f.readlines():
                 finished_set.add(line.strip())
         with open(OUTPUT_JSON_PATH+"/config/logging_failed.json", 'r',encoding='utf-8') as f:
             failed_list = json.load(f)
-        return (finished_set, failed_list)
+        with open(OUTPUT_JSON_PATH+"/config/para_hash.txt",'r',encoding='utf-8') as f:
+            for line in f.readlines():
+                para_set.add(line.strip())
+        #读取完毕
+        return (finished_set, failed_list,para_set)
 
 def update_records(finished_html):
     file_path = OUTPUT_JSON_PATH + "/config/records.txt"
@@ -51,7 +62,7 @@ def logging_failed(file_name:str):
     with open(file_path,'w',encoding='utf-8') as f:
         json.dump(data,f,indent=4,ensure_ascii=False)
 
-def data_filter(resources_queue,records,htmls_all_cnt):
+def data_filter(resources_queue,records,htmls_all_cnt,para_set:set[str]):
     # 设置进度条
     # 主循环
     pbar = tqdm(initial=len(records), total=htmls_all_cnt)
@@ -63,7 +74,7 @@ def data_filter(resources_queue,records,htmls_all_cnt):
                 continue
             with LOCK:
                 logger.info(f"{multiprocessing.current_process().name}当前正在对文件:{raw_html}进行清洗工作")
-            FileConvert.convert(os.path.join(Config.RAW_HTML_PATH,raw_html),raw_html) # 转换并保存为json和md
+            FileConvert.convert(os.path.join(Config.RAW_HTML_PATH,raw_html),raw_html,para_set) # 转换并保存为json和md
 
             with LOCK:
                 records.add(raw_html)
@@ -78,9 +89,9 @@ def data_filter(resources_queue,records,htmls_all_cnt):
         finally:
             resources_queue.task_done()
 
-def create_process(resources_queue,records,htmls_all_cnt):
+def create_process(resources_queue,records,htmls_all_cnt,para_set:set[str]):
     for id in range(Config.MAXNUM_PROCESSES):
-        process = multiprocessing.Process(name=f"进程{id}",target=data_filter,args=(resources_queue,records,htmls_all_cnt))
+        process = multiprocessing.Process(name=f"进程{id}",target=data_filter,args=(resources_queue,records,htmls_all_cnt,para_set))
         process.daemon = True # 守护进程
         process.start()
 
@@ -104,7 +115,7 @@ def main():
     htmls_all_cnt = len(raw_htmls)
     resources_queue = multiprocessing.JoinableQueue()  # 资源队列
     # 读取已完成/失败的记录表 records(set)
-    records,fails = init()
+    records,fails,para_set = init()
     #实时计算records的大小size，这代表着进度->size/len(raw_htmls)
     htmls_all_finished = len(records)
     #实时计算logging_failed.json中失败或无效的文件数目
@@ -114,7 +125,7 @@ def main():
     logger.info(f"当前总任务数: {htmls_all_cnt},已完成的任务数:{htmls_all_finished},失败或无效的任务数:{htmls_all_failed}")
     pbar = tqdm(initial=htmls_all_finished,total=htmls_all_cnt)
     pbar.refresh()
-    create_process(resources_queue, records,htmls_all_cnt)
+    create_process(resources_queue, records,htmls_all_cnt,para_set)
     # 将其全都放入资源队列中
     for raw_html in raw_htmls:
         resources_queue.put(raw_html)

@@ -21,6 +21,7 @@ class Convert_Config:
         config = cc.query.get(1)
         self.ALL_FILES_PATH = config.all_files_path
         self.COMMON_OUTPUT_PATH = config.common_output_path
+        self.SCHOOL_ID = config.id
         self.SCHOOL_NAME = config.school_name
         self.SCHOOL_SIMPLE = config.school_simple
         self.MAXNUM_PROCESSES = config.maxnum_processes

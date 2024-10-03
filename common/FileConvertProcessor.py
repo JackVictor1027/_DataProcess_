@@ -41,7 +41,7 @@ class FileConvert:
                              ] + self.word_suffix + [self.ppt_suffix
                                                      ] + self.html_suffix
 
-    def convert(self, filepath: str,file_name:str)->str:
+    def convert(self, filepath: str,file_name:str,para_set:set[str])->str:
         """转换文件格式。"""
         if not os.path.isabs(filepath):
             raise ValueError("File path must be an absolute path.")
@@ -67,7 +67,7 @@ class FileConvert:
             self.convert_ppt(filepath, file_name)
             return "pptx2md"
         elif file_type == "html":
-            return self.convert_html(filepath,file_name)
+            return self.convert_html(filepath,file_name,para_set)
         elif file_type == "text":
             self.convert_text(filepath, file_name)
             return "txt2md"
@@ -191,7 +191,7 @@ class FileConvert:
         return markdown_content
 
     # HTML清洗，转换及保存
-    def convert_html(self, filepath: str,html_name:str) -> str:
+    def convert_html(self, filepath: str,html_name:str,para_set:set[str]) -> str:
         """读取HTML文件并转换为Markdown格式。"""
         with open(filepath, 'r', encoding='utf-8') as file:
             soup = BeautifulSoup(file, 'html.parser')
@@ -199,6 +199,8 @@ class FileConvert:
         # 正则表达式匹配多个换行符，用一个换行符全替换
         pat = r'\n{2,}'
         markdown_content = re.sub(pat, '\n', markdown_content)
+        # TODO:对markdown_content做去重处理：内容当中存在与之前的md相同的文段部分（主要是一段的非正文）
+        markdown_content = self.remove_duplicated(markdown_content,para_set)
         attrs = self.attr_process(markdown_content,html_name)
         img_path = os.path.join(OUTPUT_JSON_PATH,attrs['title']+"/images")
         for i, img in enumerate(soup.find_all('img'), start=1):
@@ -210,7 +212,6 @@ class FileConvert:
             image_name = f"image_{i}.png"
             self.save_image(image_bytes, image_name,img_path)
             markdown_content += f"![image](images/{image_name})\n\n"
-
         hash_value = generate_hash_value(markdown_content)
         keywords = extract_keywords(markdown_content,self.md_image_pattern)
         # 保存到每个md子节目，md与json是平级的，img都在下一级
@@ -224,6 +225,27 @@ class FileConvert:
         with open(filepath, 'r', encoding='utf-8') as file:
             markdown_content = file.read()
         save_as_md(output_path, txt_name, markdown_content)
+
+
+    def remove_duplicated(self,content:str,para_set:set[str])->str:
+        new_content = ""
+        new_hashs = set() #用于后续文段追加用，效率高些
+        #解析content的每一文段，计算出对应的hashValue
+        #在这里，我们认为，使用换行符隔开即算作是有两个文段，那么我们就使用split直接分割得到每一段
+        paras = content.split('\n')
+        for para in paras:
+            hash_value = generate_hash_value(para)
+            if hash_value not in para_set:
+                # 哈希值不存在，即文段不重复
+                para_set.add(hash_value)
+                new_hashs.add(hash_value)
+                new_content += para+'\n\n'
+        txt_path = FilterConfig.PURIED_JSON_PATH+FilterConfig.SCHOOL_SIMPLE+"/config/"
+        #将新添加进的文段哈希值追加到txt尾部
+        with open(txt_path+"para_hash.txt",'a',encoding='utf-8') as f:
+            for hash in new_hashs:
+                f.write(hash+'\n')
+        return new_content
 
     def get_html_link(self, html_name) -> str:
         with open("url_mapping.json", 'r') as f:

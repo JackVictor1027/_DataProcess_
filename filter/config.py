@@ -23,6 +23,7 @@ class Filter_Config:
 		self.RAW_HTML_PATH = config.raw_html_path
 		self.PURIED_JSON_PATH = config.puried_json_path
 		self.LOCAL_MODEL = config.local_model
+		self.SCHOOL_ID = config.id
 		self.SCHOOL_NAME = config.school_name
 		self.SCHOOL_SIMPLE = config.school_simple
 		self.MAXNUM_PROCESSES = config.maxnum_processes
